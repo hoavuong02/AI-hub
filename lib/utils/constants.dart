@@ -55,4 +55,16 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.visibility,
     'color': Colors.indigo,
   },
+  {
+    "name": "Qwen",
+    "url": "https://chat.qwen.ai/",
+    "icon": Icons.question_answer,
+    "color": Colors.deepPurple,
+  },
+  {
+    "name": "Mistral",
+    "url": "https://chat.mistral.ai/",
+    "icon": Icons.maps_ugc,
+    "color": Colors.deepOrange,
+  },
 ];
