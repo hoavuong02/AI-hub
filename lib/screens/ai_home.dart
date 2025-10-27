@@ -162,6 +162,8 @@ class _AiHomeState extends State<AiHome> {
         disableVerticalScroll: false,
         disableHorizontalScroll: false,
         supportZoom: false,
+        userAgent:
+            "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36",
       ),
       onWebViewCreated: (controller) {
         _controllers[index] = controller;
