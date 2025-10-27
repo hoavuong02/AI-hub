@@ -1,23 +1,34 @@
 # 🤖 AI Hub
 
-**AI Hub** is a simple and modern Flutter app that aggregates multiple AI assistants in a single tabbed interface, featuring Material Design 3, webview integration, and persistent session management.
-
-I built this app because I wanted quick access to all my favorite AI tools in one place without switching between multiple browser tabs.
+**AI Hub** is a clean and modern Flutter app that brings multiple AI assistants together in one place.
+It uses a tabbed interface with Material Design 3, built-in WebView, and session persistence to make switching between AI tools effortless.
 
 ---
 
 ## ✨ Features
 
-* 🧭 **Material You design (MD3)** — clean, modern, and responsive
-* 🌙 **Automatic light/dark theme**
-* 🕸️ **Webview integration** for seamless AI assistant access
-* 💾 **Persistent session management** — remembers your last used AI
-* 📱 **Tabbed interface** for quick switching between AI tools
-* ⚡ **Fast loading** with intelligent tab management
+* 🧭 **Material You (MD3)** — modern, adaptive, and responsive design
+* 🌙 **Auto light/dark theme** — matches your system theme
+* 🕸️ **WebView integration** — seamless browsing experience
+* 💾 **Session memory** — remembers your last opened AI
+* 📱 **Tabbed interface** — easy switching between assistants
+* ⚡ **Fast and smooth** — optimized for quick loading
+
+---
+
+## 🧩 Pending Features
+
+* 🚫 **Ads and tracker blocker** — contributors are welcome!
+* ☁️ **Backup and restore** — for saving your sessions and preferences
+
+---
+
+## ⭐ Support
+
+If you like this project, please **star this repository** to show your support and help it grow!
 
 ---
 
 ## 📜 License
 
-Licensed under the **GNU General Public License v3.0 (GPLv3)**.  
-You may use, modify, and share it under the same license.
+Released under the **GNU General Public License v3.0 (GPLv3)**.
