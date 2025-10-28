@@ -16,6 +16,12 @@ It uses a tabbed interface with Material Design 3, built-in WebView, and session
 
 ---
 
+## 📱 Screenshot
+
+> SCREENSHOT WILL BE ADDED SOON.
+
+---
+
 ## 🧩 Pending Features
 
 * 🚫 **Ads and tracker blocker** — contributors are welcome!
