@@ -1,3 +1,4 @@
+import 'package:aihub/screens/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../utils/constants.dart';
@@ -229,23 +230,19 @@ class _AiHomeState extends State<AiHome> {
     );
   }
 
-  // Handle Android back button
   Future<bool> _onWillPop() async {
     final currentController = _controllers[_selectedIndex];
 
     if (currentController != null && _canGoBackList[_selectedIndex]) {
-      // Check if current URL is the initial URL
       final currentUrl = await currentController.getUrl();
       final initialUrl = aiList[_selectedIndex]['url'];
 
       if (currentUrl != null && currentUrl.toString() != initialUrl) {
-        // Go back in webview history
         await currentController.goBack();
-        return false; // Don't exit app
+        return false;
       }
     }
 
-    // If can't go back or at initial URL, allow app to exit
     return true;
   }
 
@@ -388,27 +385,79 @@ class _AiHomeState extends State<AiHome> {
             ),
           ),
           actions: [
-            // Reload button - always visible when webview is loaded
-            if (_hasBeenLoadedList[_selectedIndex] &&
-                !_isLoadingList[_selectedIndex])
-              IconButton(
-                icon: Icon(Icons.refresh_rounded),
-                onPressed: () => _reloadPage(_selectedIndex),
-                tooltip: 'Reload',
-              ),
-            // Back button - only visible when can go back
-            if (_canGoBackList[_selectedIndex] &&
-                _hasBeenLoadedList[_selectedIndex])
-              IconButton(
-                icon: Icon(Icons.arrow_back_ios_rounded),
-                onPressed: () async {
-                  final controller = _controllers[_selectedIndex];
-                  if (controller != null && await controller.canGoBack()) {
-                    await controller.goBack();
+            IconButton(
+              onPressed: () {
+                showMenu(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                    MediaQuery.of(context).size.width,
+                    kToolbarHeight,
+                    0,
+                    0,
+                  ),
+                  items: [
+                    if (_hasBeenLoadedList[_selectedIndex] &&
+                        !_isLoadingList[_selectedIndex])
+                      PopupMenuItem(
+                        value: 'reload',
+                        child: Row(
+                          children: [
+                            Icon(Icons.refresh, color: Colors.blue),
+                            SizedBox(width: 10),
+                            Text(
+                              'Reload',
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (_canGoBackList[_selectedIndex] &&
+                        _hasBeenLoadedList[_selectedIndex])
+                      PopupMenuItem(
+                        value: 'back',
+                        child: Row(
+                          children: [
+                            Icon(Icons.arrow_back_ios, color: Colors.blue),
+                            SizedBox(width: 10),
+                            Text(
+                              'Go back',
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    PopupMenuItem(
+                      value: 'settings',
+                      child: Row(
+                        children: [
+                          Icon(Icons.settings, color: Colors.deepPurple),
+                          SizedBox(width: 10),
+                          Text('Settings'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  elevation: 12,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  color: Colors.white,
+                ).then((value) async {
+                  if (value == 'reload') {
+                    _reloadPage(_selectedIndex);
+                  } else if (value == 'back') {
+                    await _controllers[_selectedIndex]?.goBack();
+                  } else if (value == 'settings') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => SettingsScreen()),
+                    );
+                    setState(() {});
                   }
-                },
-                tooltip: 'Go back',
-              ),
+                });
+              },
+              icon: Icon(Icons.more_vert_rounded),
+              tooltip: "More options",
+            ),
           ],
         ),
 
