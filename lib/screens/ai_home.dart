@@ -402,7 +402,7 @@ class _AiHomeState extends State<AiHome> {
                         value: 'reload',
                         child: Row(
                           children: [
-                            Icon(Icons.refresh, color: Colors.blue),
+                            Icon(Icons.refresh),
                             SizedBox(width: 10),
                             Text(
                               'Reload',
@@ -417,7 +417,7 @@ class _AiHomeState extends State<AiHome> {
                         value: 'back',
                         child: Row(
                           children: [
-                            Icon(Icons.arrow_back_ios, color: Colors.blue),
+                            Icon(Icons.arrow_back_ios),
                             SizedBox(width: 10),
                             Text(
                               'Go back',
@@ -430,7 +430,7 @@ class _AiHomeState extends State<AiHome> {
                       value: 'settings',
                       child: Row(
                         children: [
-                          Icon(Icons.settings, color: Colors.deepPurple),
+                          Icon(Icons.settings),
                           SizedBox(width: 10),
                           Text('Settings'),
                         ],
@@ -441,7 +441,6 @@ class _AiHomeState extends State<AiHome> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  color: Colors.white,
                 ).then((value) async {
                   if (value == 'reload') {
                     _reloadPage(_selectedIndex);
