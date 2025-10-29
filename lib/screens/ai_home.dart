@@ -206,8 +206,9 @@ class _AiHomeState extends State<AiHome> {
   void _retryLoading(int index) {
     if (index < 0 ||
         index >= _controllers.length ||
-        _controllers[index] == null)
+        _controllers[index] == null) {
       return;
+    }
     setState(() {
       _errorMessages[index] = null;
       _isLoadingList[index] = true;
@@ -220,8 +221,9 @@ class _AiHomeState extends State<AiHome> {
   void _reloadPage(int index) {
     if (index < 0 ||
         index >= _controllers.length ||
-        _controllers[index] == null)
+        _controllers[index] == null) {
       return;
+    }
     setState(() {
       _errorMessages[index] = null;
       _isLoadingList[index] = true;
