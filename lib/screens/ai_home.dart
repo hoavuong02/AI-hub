@@ -22,22 +22,64 @@ class _AiHomeState extends State<AiHome> {
   final List<String?> _errorMessages = [];
   final List<bool> _canGoBackList = [];
   String _currentDomain = 'AI Hub';
+  List<Map<String, dynamic>> _enabledAiList = [];
 
   @override
   void initState() {
     super.initState();
     _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _loadEnabledAiList();
     _loadLastAiIndex();
   }
 
-  void _initializeData() {
-    for (int i = 0; i < aiList.length; i++) {
-      _controllers.add(null);
-      _currentUrls.add(aiList[i]['url']);
-      _isLoadingList.add(false);
-      _hasBeenLoadedList.add(false);
-      _errorMessages.add(null);
-      _canGoBackList.add(false);
+  Future<void> _loadEnabledAiList() async {
+    _enabledAiList = [];
+    for (var ai in aiList) {
+      final isEnabled = await SharedPrefs.getAiStatus(ai['name']);
+      if (isEnabled) {
+        _enabledAiList.add(ai);
+      }
+    }
+
+    if (_enabledAiList.isEmpty) {
+      _enabledAiList = List.from(aiList);
+      for (var ai in aiList) {
+        await SharedPrefs.setAiStatus(ai['name'], true);
+      }
+    }
+
+    for (int i = 0; i < _enabledAiList.length; i++) {
+      if (i >= _controllers.length) _controllers.add(null);
+      if (i >= _currentUrls.length) _currentUrls.add(_enabledAiList[i]['url']);
+      if (i >= _isLoadingList.length) _isLoadingList.add(false);
+      if (i >= _hasBeenLoadedList.length) _hasBeenLoadedList.add(false);
+      if (i >= _errorMessages.length) _errorMessages.add(null);
+      if (i >= _canGoBackList.length) _canGoBackList.add(false);
+    }
+
+    if (_controllers.length > _enabledAiList.length) {
+      _controllers.removeRange(_enabledAiList.length, _controllers.length);
+    }
+    if (_currentUrls.length > _enabledAiList.length) {
+      _currentUrls.removeRange(_enabledAiList.length, _currentUrls.length);
+    }
+    if (_isLoadingList.length > _enabledAiList.length) {
+      _isLoadingList.removeRange(_enabledAiList.length, _isLoadingList.length);
+    }
+    if (_hasBeenLoadedList.length > _enabledAiList.length) {
+      _hasBeenLoadedList.removeRange(
+        _enabledAiList.length,
+        _hasBeenLoadedList.length,
+      );
+    }
+    if (_errorMessages.length > _enabledAiList.length) {
+      _errorMessages.removeRange(_enabledAiList.length, _errorMessages.length);
+    }
+    if (_canGoBackList.length > _enabledAiList.length) {
+      _canGoBackList.removeRange(_enabledAiList.length, _canGoBackList.length);
     }
   }
 
@@ -55,9 +97,9 @@ class _AiHomeState extends State<AiHome> {
                 context,
               ).colorScheme.onSurface.withValues(alpha: 0.3),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
-              'Tap to load ${aiList[index]['name']}',
+              'Tap to load ${_enabledAiList[index]['name']}',
               style: TextStyle(
                 color: Theme.of(
                   context,
@@ -73,14 +115,40 @@ class _AiHomeState extends State<AiHome> {
 
   Future<void> _loadLastAiIndex() async {
     try {
-      final lastIndex = await SharedPrefs.getLastAiIndex();
+      final shouldLoadLast = await SharedPrefs.getLoadLastOpenedAi();
+      int lastIndex;
+
+      if (shouldLoadLast) {
+        final lastAiName = await SharedPrefs.getLastAiName();
+        lastIndex = _enabledAiList.indexWhere((ai) => ai['name'] == lastAiName);
+        if (lastIndex == -1) lastIndex = 0;
+      } else {
+        final defaultAiName = await SharedPrefs.getDefaultAiName();
+        lastIndex = _enabledAiList.indexWhere(
+          (ai) => ai['name'] == defaultAiName,
+        );
+        if (lastIndex == -1) lastIndex = 0;
+      }
+
+      if (lastIndex >= _enabledAiList.length) {
+        lastIndex = 0;
+      }
+
       setState(() {
         _selectedIndex = lastIndex;
-        _currentDomain = _getDomainFromUrl(aiList[lastIndex]['url']);
+        _currentDomain = _getDomainFromUrl(_enabledAiList[lastIndex]['url']);
       });
       _createWebViewForTab(lastIndex);
     } catch (e) {
       debugPrint('Error loading last AI index: $e');
+
+      if (_enabledAiList.isNotEmpty) {
+        setState(() {
+          _selectedIndex = 0;
+          _currentDomain = _getDomainFromUrl(_enabledAiList[0]['url']);
+        });
+        _createWebViewForTab(0);
+      }
     }
   }
 
@@ -94,7 +162,9 @@ class _AiHomeState extends State<AiHome> {
   }
 
   void _onItemTapped(int index) {
-    SharedPrefs.saveLastAiIndex(index);
+    if (index < 0 || index >= _enabledAiList.length) return;
+
+    SharedPrefs.saveLastAiName(_enabledAiList[index]['name']);
 
     if (!_hasBeenLoadedList[index]) {
       _createWebViewForTab(index);
@@ -110,6 +180,8 @@ class _AiHomeState extends State<AiHome> {
   }
 
   void _createWebViewForTab(int index) {
+    if (index < 0 || index >= _enabledAiList.length) return;
+
     setState(() {
       _hasBeenLoadedList[index] = true;
       _isLoadingList[index] = true;
@@ -132,7 +204,10 @@ class _AiHomeState extends State<AiHome> {
   }
 
   void _retryLoading(int index) {
-    if (_controllers[index] == null) return;
+    if (index < 0 ||
+        index >= _controllers.length ||
+        _controllers[index] == null)
+      return;
     setState(() {
       _errorMessages[index] = null;
       _isLoadingList[index] = true;
@@ -143,7 +218,10 @@ class _AiHomeState extends State<AiHome> {
   }
 
   void _reloadPage(int index) {
-    if (_controllers[index] == null) return;
+    if (index < 0 ||
+        index >= _controllers.length ||
+        _controllers[index] == null)
+      return;
     setState(() {
       _errorMessages[index] = null;
       _isLoadingList[index] = true;
@@ -152,9 +230,13 @@ class _AiHomeState extends State<AiHome> {
   }
 
   Widget _buildWebView(int index) {
+    if (index < 0 || index >= _enabledAiList.length) {
+      return _buildPlaceholder(0);
+    }
+
     return InAppWebView(
       key: Key('webview_$index'),
-      initialUrlRequest: URLRequest(url: WebUri(aiList[index]['url'])),
+      initialUrlRequest: URLRequest(url: WebUri(_enabledAiList[index]['url'])),
       initialSettings: InAppWebViewSettings(
         forceDark: ForceDark.AUTO,
         javaScriptEnabled: true,
@@ -167,7 +249,9 @@ class _AiHomeState extends State<AiHome> {
             "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36",
       ),
       onWebViewCreated: (controller) {
-        _controllers[index] = controller;
+        if (index < _controllers.length) {
+          _controllers[index] = controller;
+        }
         controller.addUserScript(
           userScript: UserScript(
             source: _themeScript,
@@ -176,10 +260,12 @@ class _AiHomeState extends State<AiHome> {
         );
       },
       onLoadStart: (controller, url) {
-        setState(() {
-          _isLoadingList[index] = true;
-          _errorMessages[index] = null;
-        });
+        if (index < _isLoadingList.length) {
+          setState(() {
+            _isLoadingList[index] = true;
+            _errorMessages[index] = null;
+          });
+        }
         if (index == _selectedIndex) {
           setState(() {
             _currentDomain = url?.host ?? 'AI Hub';
@@ -188,11 +274,13 @@ class _AiHomeState extends State<AiHome> {
       },
       onLoadStop: (controller, url) async {
         final canGoBack = await controller.canGoBack();
-        setState(() {
-          _isLoadingList[index] = false;
-          _currentUrls[index] = url?.toString() ?? aiList[index]['url'];
-          _canGoBackList[index] = canGoBack;
-        });
+        if (index < _isLoadingList.length) {
+          setState(() {
+            _isLoadingList[index] = false;
+            if (url != null) _currentUrls[index] = url.toString();
+            _canGoBackList[index] = canGoBack;
+          });
+        }
         if (index == _selectedIndex) {
           setState(() {
             _currentDomain = url?.host ?? 'AI Hub';
@@ -200,24 +288,30 @@ class _AiHomeState extends State<AiHome> {
         }
       },
       onLoadError: (controller, url, code, message) {
-        setState(() {
-          _isLoadingList[index] = false;
-          _errorMessages[index] = 'Failed to load page. Error: $message';
-        });
+        if (index < _isLoadingList.length) {
+          setState(() {
+            _isLoadingList[index] = false;
+            _errorMessages[index] = 'Failed to load page. Error: $message';
+          });
+        }
       },
       onLoadHttpError: (controller, url, statusCode, description) {
         if (500 <= statusCode && statusCode < 600) return;
-        setState(() {
-          _isLoadingList[index] = false;
-          _errorMessages[index] = 'HTTP Error $statusCode: $description';
-        });
+        if (index < _isLoadingList.length) {
+          setState(() {
+            _isLoadingList[index] = false;
+            _errorMessages[index] = 'HTTP Error $statusCode: $description';
+          });
+        }
       },
       onUpdateVisitedHistory: (controller, url, androidIsReload) async {
         final canGoBack = await controller.canGoBack();
-        setState(() {
-          _canGoBackList[index] = canGoBack;
-          _currentUrls[index] = url?.toString() ?? aiList[index]['url'];
-        });
+        if (index < _canGoBackList.length) {
+          setState(() {
+            _canGoBackList[index] = canGoBack;
+            if (url != null) _currentUrls[index] = url.toString();
+          });
+        }
         if (index == _selectedIndex) {
           setState(() {
             _currentDomain = url?.host ?? 'AI Hub';
@@ -231,11 +325,18 @@ class _AiHomeState extends State<AiHome> {
   }
 
   Future<bool> _onWillPop() async {
+    if (_selectedIndex >= _controllers.length ||
+        _controllers[_selectedIndex] == null) {
+      return true;
+    }
+
     final currentController = _controllers[_selectedIndex];
 
-    if (currentController != null && _canGoBackList[_selectedIndex]) {
+    if (currentController != null &&
+        _selectedIndex < _canGoBackList.length &&
+        _canGoBackList[_selectedIndex]) {
       final currentUrl = await currentController.getUrl();
-      final initialUrl = aiList[_selectedIndex]['url'];
+      final initialUrl = _enabledAiList[_selectedIndex]['url'];
 
       if (currentUrl != null && currentUrl.toString() != initialUrl) {
         await currentController.goBack();
@@ -254,10 +355,76 @@ class _AiHomeState extends State<AiHome> {
     super.dispose();
   }
 
+  Future<void> _handleSettingsReturn() async {
+    await _loadEnabledAiList();
+
+    if (_selectedIndex >= _enabledAiList.length) {
+      _selectedIndex = 0;
+    }
+
+    if (_selectedIndex < _hasBeenLoadedList.length &&
+        _hasBeenLoadedList[_selectedIndex]) {
+      setState(() {
+        _currentDomain = _getDomainFromUrl(
+          _enabledAiList[_selectedIndex]['url'],
+        );
+      });
+    }
+
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    if (_enabledAiList.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('AI Hub'), centerTitle: true),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.psychology_rounded,
+                size: 64,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No AI assistants enabled',
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Enable at least one AI in Settings',
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      )
+                      .then((_) => _handleSettingsReturn());
+                },
+                child: const Text('Open Settings'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -270,13 +437,13 @@ class _AiHomeState extends State<AiHome> {
           foregroundColor: theme.colorScheme.onPrimaryContainer,
           elevation: 2,
           shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.1),
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
           ),
           title: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(6),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -287,7 +454,7 @@ class _AiHomeState extends State<AiHome> {
                   size: 20,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +471,7 @@ class _AiHomeState extends State<AiHome> {
                     ),
                     Text(
                       _currentDomain,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         overflow: TextOverflow.ellipsis,
@@ -313,9 +480,10 @@ class _AiHomeState extends State<AiHome> {
                   ],
                 ),
               ),
-              if (_isLoadingList[_selectedIndex])
+              if (_selectedIndex < _isLoadingList.length &&
+                  _isLoadingList[_selectedIndex])
                 Container(
-                  padding: EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -331,8 +499,8 @@ class _AiHomeState extends State<AiHome> {
                           color: theme.colorScheme.primary,
                         ),
                       ),
-                      SizedBox(width: 6),
-                      Text(
+                      const SizedBox(width: 6),
+                      const Text(
                         'Loading',
                         style: TextStyle(
                           fontSize: 12,
@@ -342,10 +510,11 @@ class _AiHomeState extends State<AiHome> {
                     ],
                   ),
                 ),
-              if (_errorMessages[_selectedIndex] != null &&
+              if (_selectedIndex < _errorMessages.length &&
+                  _errorMessages[_selectedIndex] != null &&
                   !_isLoadingList[_selectedIndex])
                 Container(
-                  padding: EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -358,7 +527,7 @@ class _AiHomeState extends State<AiHome> {
                         color: theme.colorScheme.error,
                         size: 12,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
                         'Error',
                         style: TextStyle(
@@ -374,13 +543,13 @@ class _AiHomeState extends State<AiHome> {
           ),
           leading: Builder(
             builder: (context) => Container(
-              margin: EdgeInsets.all(8),
+              margin: const EdgeInsets.all(8),
               child: FloatingActionButton.small(
                 onPressed: () => Scaffold.of(context).openDrawer(),
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
                 elevation: 1,
-                child: Icon(Icons.menu_rounded),
+                child: const Icon(Icons.menu_rounded),
               ),
             ),
           ),
@@ -396,9 +565,10 @@ class _AiHomeState extends State<AiHome> {
                     0,
                   ),
                   items: [
-                    if (_hasBeenLoadedList[_selectedIndex] &&
+                    if (_selectedIndex < _hasBeenLoadedList.length &&
+                        _hasBeenLoadedList[_selectedIndex] &&
                         !_isLoadingList[_selectedIndex])
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'reload',
                         child: Row(
                           children: [
@@ -411,9 +581,10 @@ class _AiHomeState extends State<AiHome> {
                           ],
                         ),
                       ),
-                    if (_canGoBackList[_selectedIndex] &&
+                    if (_selectedIndex < _canGoBackList.length &&
+                        _canGoBackList[_selectedIndex] &&
                         _hasBeenLoadedList[_selectedIndex])
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'back',
                         child: Row(
                           children: [
@@ -426,7 +597,7 @@ class _AiHomeState extends State<AiHome> {
                           ],
                         ),
                       ),
-                    PopupMenuItem(
+                    const PopupMenuItem(
                       value: 'settings',
                       child: Row(
                         children: [
@@ -447,14 +618,17 @@ class _AiHomeState extends State<AiHome> {
                   } else if (value == 'back') {
                     await _controllers[_selectedIndex]?.goBack();
                   } else if (value == 'settings') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => SettingsScreen()),
-                    );
-                    setState(() {});
+                    Navigator.of(context)
+                        .push(
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        )
+                        .then((_) => _handleSettingsReturn());
                   }
                 });
               },
-              icon: Icon(Icons.more_vert_rounded),
+              icon: const Icon(Icons.more_vert_rounded),
               tooltip: "More options",
             ),
           ],
@@ -466,21 +640,26 @@ class _AiHomeState extends State<AiHome> {
               IndexedStack(
                 index: _selectedIndex,
                 children: List.generate(
-                  aiList.length,
-                  (index) => _hasBeenLoadedList[index]
+                  _enabledAiList.length,
+                  (index) =>
+                      index < _hasBeenLoadedList.length &&
+                          _hasBeenLoadedList[index]
                       ? _buildWebView(index)
                       : _buildPlaceholder(index),
                 ),
               ),
-              if (_isLoadingList[_selectedIndex] &&
+              if (_selectedIndex < _isLoadingList.length &&
+                  _isLoadingList[_selectedIndex] &&
+                  _selectedIndex < _errorMessages.length &&
                   _errorMessages[_selectedIndex] == null)
                 Positioned.fill(
                   child: LoadingWidget(
-                    aiName: aiList[_selectedIndex]['name'],
+                    aiName: _enabledAiList[_selectedIndex]['name'],
                     domain: _currentDomain,
                   ),
                 ),
-              if (_errorMessages[_selectedIndex] != null &&
+              if (_selectedIndex < _errorMessages.length &&
+                  _errorMessages[_selectedIndex] != null &&
                   !_isLoadingList[_selectedIndex])
                 Positioned.fill(
                   child: CustomErrorWidget(
@@ -498,6 +677,7 @@ class _AiHomeState extends State<AiHome> {
           isLoadingList: _isLoadingList,
           hasBeenLoadedList: _hasBeenLoadedList,
           errorMessages: _errorMessages,
+          enabledAiList: _enabledAiList,
         ),
       ),
     );
