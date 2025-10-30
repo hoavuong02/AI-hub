@@ -1,20 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefs {
-  static const String _lastAiIndexKey = 'lastAiIndex';
   static const String _loadLastOpenedAiKey = 'loadLastOpenedAi';
   static const String _defaultAiNameKey = 'defaultAiName';
   static const String _aiStatusPrefix = 'ai_status_';
-
-  static Future<int> getLastAiIndex() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_lastAiIndexKey) ?? 0;
-  }
-
-  static Future<void> saveLastAiIndex(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_lastAiIndexKey, index);
-  }
 
   static Future<bool> getLoadLastOpenedAi() async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,7 +35,6 @@ class SharedPrefs {
     await prefs.setBool('$_aiStatusPrefix$aiName', isEnabled);
   }
 
-  // Add this method to SharedPrefs class
   static Future<void> saveLastAiName(String name) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('lastAiName', name);
