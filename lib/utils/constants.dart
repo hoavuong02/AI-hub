@@ -15,7 +15,7 @@ final List<Map<String, dynamic>> aiList = [
   },
   {
     'name': 'Venice',
-    'url': 'https://venice.ai/',
+    'url': 'https://venice.ai/chat',
     'icon': Icons.brush,
     'color': Colors.cyan,
   },
