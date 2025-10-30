@@ -13,6 +13,7 @@ class AiControlScreenState extends State<AiControlScreen> {
   Map<String, bool> aiStatus = {};
   bool _isLoading = true;
   String _defaultAiName = 'ChatGPT';
+  bool _loadLastOpenedAi = true;
 
   @override
   void initState() {
@@ -23,6 +24,7 @@ class AiControlScreenState extends State<AiControlScreen> {
   Future<void> _loadAiStatus() async {
     final savedStatus = <String, bool>{};
     final defaultAi = await SharedPrefs.getDefaultAiName();
+    final loadLastAi = await SharedPrefs.getLoadLastOpenedAi();
 
     for (var ai in aiList) {
       final name = ai['name'];
@@ -33,6 +35,7 @@ class AiControlScreenState extends State<AiControlScreen> {
     setState(() {
       aiStatus = savedStatus;
       _defaultAiName = defaultAi;
+      _loadLastOpenedAi = loadLastAi;
       _isLoading = false;
     });
   }
@@ -47,6 +50,7 @@ class AiControlScreenState extends State<AiControlScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDefaultAiProtected = !_loadLastOpenedAi;
 
     return Scaffold(
       appBar: AppBar(title: const Text('AI Control'), centerTitle: true),
@@ -77,14 +81,24 @@ class AiControlScreenState extends State<AiControlScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Default AI ($_defaultAiName) cannot be disabled',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w500,
+                      if (isDefaultAiProtected)
+                        Text(
+                          'Default AI ($_defaultAiName) cannot be disabled',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                      else
+                        Text(
+                          '"Load last opened AI" is enabled - all AIs can be disabled',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
                     ],
                   ),
                 ),
@@ -99,6 +113,8 @@ class AiControlScreenState extends State<AiControlScreen> {
                       final color = ai['color'];
                       final isDefaultAi = name == _defaultAiName;
                       final isEnabled = aiStatus[name] ?? true;
+                      final isSwitchDisabled =
+                          isDefaultAi && isDefaultAiProtected;
 
                       return Card(
                         elevation: 2,
@@ -117,12 +133,12 @@ class AiControlScreenState extends State<AiControlScreen> {
                                 name,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
-                                  color: isDefaultAi
+                                  color: isDefaultAi && isDefaultAiProtected
                                       ? theme.colorScheme.primary
                                       : theme.colorScheme.onSurface,
                                 ),
                               ),
-                              if (isDefaultAi)
+                              if (isDefaultAi && isDefaultAiProtected)
                                 Container(
                                   margin: const EdgeInsets.only(left: 8),
                                   padding: const EdgeInsets.symmetric(
@@ -145,8 +161,10 @@ class AiControlScreenState extends State<AiControlScreen> {
                                 ),
                             ],
                           ),
-                          subtitle: isDefaultAi
-                              ? const Text('Default AI cannot be disabled')
+                          subtitle: isDefaultAi && isDefaultAiProtected
+                              ? const Text(
+                                  'Default AI cannot be disabled when "Load last opened AI" is OFF',
+                                )
                               : Text('Enable or disable $name'),
                           secondary: Container(
                             padding: const EdgeInsets.all(8),
@@ -156,14 +174,17 @@ class AiControlScreenState extends State<AiControlScreen> {
                             ),
                             child: Icon(
                               icon,
-                              color: isDefaultAi && !isEnabled
+                              color:
+                                  isDefaultAi &&
+                                      isDefaultAiProtected &&
+                                      !isEnabled
                                   ? theme.colorScheme.primary
                                   : color,
                             ),
                           ),
                           value: isEnabled,
-                          onChanged: isDefaultAi
-                              ? null // Disable switch for default AI
+                          onChanged: isSwitchDisabled
+                              ? null // Disable switch for protected default AI
                               : (value) {
                                   _updateAiStatus(name, value);
                                 },
