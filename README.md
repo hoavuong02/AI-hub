@@ -16,22 +16,29 @@ It uses a tabbed interface with Material Design 3, built-in WebView, and session
 
 ---
 
-## 📱 Screenshot
+## 📱 App Screenshots
 
-<p align="center">
-  <!-- Dark theme -->
-  <img src="screenshots/dark-theme/drawer.jpg" width="45%" style="margin:5px;" />
-  <img src="screenshots/dark-theme/home.jpg" width="45%" style="margin:5px;" />
-  <img src="screenshots/dark-theme/settings.jpg" width="45%" style="margin:5px;" />
-  <img src="screenshots/dark-theme/control.jpg" width="45%" style="margin:5px;" />
-  
-  <!-- Light theme -->
-  <img src="screenshots/light-theme/drawer.jpg" width="45%" style="margin:5px;" />
-  <img src="screenshots/light-theme/home.jpg" width="45%" style="margin:5px;" />
-  <img src="screenshots/light-theme/settings.jpg" width="45%" style="margin:5px;" />
-  <img src="screenshots/light-theme/control.jpg" width="45%" style="margin:5px;" />
+<div align="center">
 
+### 🌙 Dark Theme
+<p>
+  <img src="screenshots/dark-theme/home.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3); margin:8px;" />
+  <img src="screenshots/dark-theme/drawer.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3); margin:8px;" />
+  <img src="screenshots/dark-theme/settings.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3); margin:8px;" />
+  <img src="screenshots/dark-theme/control.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3); margin:8px;" />
 </p>
+
+---
+
+### ☀️ Light Theme
+<p>
+  <img src="screenshots/light-theme/home.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2); margin:8px;" />
+  <img src="screenshots/light-theme/drawer.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2); margin:8px;" />
+  <img src="screenshots/light-theme/settings.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2); margin:8px;" />
+  <img src="screenshots/light-theme/control.jpg" width="45%" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2); margin:8px;" />
+</p>
+
+</div>
 
 ---
 
