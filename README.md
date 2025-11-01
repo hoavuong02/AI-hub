@@ -19,10 +19,18 @@ It uses a tabbed interface with Material Design 3, built-in WebView, and session
 ## 📱 Screenshot
 
 <p align="center">
-  <img src="screenshots/dark-theme/home.jpg" width="45%" style="margin:5px;" />
+  <!-- Dark theme -->
   <img src="screenshots/dark-theme/drawer.jpg" width="45%" style="margin:5px;" />
-  <img src="screenshots/light-theme/home.jpg" width="45%" style="margin:5px;" />
+  <img src="screenshots/dark-theme/home.jpg" width="45%" style="margin:5px;" />
+  <img src="screenshots/dark-theme/settings.jpg" width="45%" style="margin:5px;" />
+  <img src="screenshots/dark-theme/control.jpg" width="45%" style="margin:5px;" />
+  
+  <!-- Light theme -->
   <img src="screenshots/light-theme/drawer.jpg" width="45%" style="margin:5px;" />
+  <img src="screenshots/light-theme/home.jpg" width="45%" style="margin:5px;" />
+  <img src="screenshots/light-theme/settings.jpg" width="45%" style="margin:5px;" />
+  <img src="screenshots/light-theme/control.jpg" width="45%" style="margin:5px;" />
+
 </p>
 
 ---
