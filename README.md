@@ -86,8 +86,7 @@ To start contributing, fork this repo, make your changes, and open a pull reques
 
 ## ⭐ Support
 
-If you find **AI Hub** useful, please **star ⭐** the repo —  
-it helps others discover it and keeps the project active.
+If you find **AI Hub** useful, please **star ⭐**.
 
 ---
 
