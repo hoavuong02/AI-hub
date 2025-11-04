@@ -72,8 +72,7 @@ It uses Material Design 3, automatic theme detection, and built-in WebView with 
 ## 🔧 Planned Additions
 
 - 🚫 Ad and tracker blocker  
-- ☁️ Backup and restore for cookies and preferences  
-- ⚙️ Option to enable/disable AI tabs  
+- ☁️ Backup and restore for cookies and preferences
 
 ---
 
