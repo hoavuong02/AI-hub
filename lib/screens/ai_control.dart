@@ -111,6 +111,7 @@ class AiControlScreenState extends State<AiControlScreen> {
                       final name = ai['name'];
                       final icon = ai['icon'];
                       final color = ai['color'];
+                      final desc = ai['desc'];
                       final isDefaultAi = name == _defaultAiName;
                       final isEnabled = aiStatus[name] ?? true;
                       final isSwitchDisabled =
@@ -165,7 +166,8 @@ class AiControlScreenState extends State<AiControlScreen> {
                               ? const Text(
                                   'Default AI cannot be disabled when "Load last opened AI" is OFF',
                                 )
-                              : Text('Enable or disable $name'),
+                              : Text(desc),
+
                           secondary: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -184,7 +186,7 @@ class AiControlScreenState extends State<AiControlScreen> {
                           ),
                           value: isEnabled,
                           onChanged: isSwitchDisabled
-                              ? null // Disable switch for protected default AI
+                              ? null
                               : (value) {
                                   _updateAiStatus(name, value);
                                 },

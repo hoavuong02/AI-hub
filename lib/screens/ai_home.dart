@@ -23,6 +23,7 @@ class _AiHomeState extends State<AiHome> {
   final List<bool> _canGoBackList = [];
   String _currentDomain = 'AI Hub';
   List<Map<String, dynamic>> _enabledAiList = [];
+  int _defaultFontSize = 16;
 
   @override
   void initState() {
@@ -188,21 +189,6 @@ class _AiHomeState extends State<AiHome> {
     });
   }
 
-  String get _themeScript {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
-    return '''
-      (function() {
-        document.documentElement.setAttribute('data-theme', '${isDark ? 'dark' : 'light'}');
-        if (window.location.host.includes('chat.openai.com')) {
-          document.body.classList.add('${isDark ? 'dark' : 'light'}');
-        }
-        if (window.location.host.includes('duck.ai')) {
-          document.documentElement.style.colorScheme = '${isDark ? 'dark' : 'light'}';
-        }
-      })();
-    ''';
-  }
-
   void _retryLoading(int index) {
     if (index < 0 ||
         index >= _controllers.length ||
@@ -236,6 +222,10 @@ class _AiHomeState extends State<AiHome> {
       return _buildPlaceholder(0);
     }
 
+    SharedPrefs.getFontSize().then((font) {
+      return _defaultFontSize = fontSizes[font] ?? 16;
+    });
+
     return InAppWebView(
       key: Key('webview_$index'),
       initialUrlRequest: URLRequest(url: WebUri(_enabledAiList[index]['url'])),
@@ -247,19 +237,12 @@ class _AiHomeState extends State<AiHome> {
         disableVerticalScroll: false,
         disableHorizontalScroll: false,
         supportZoom: false,
-        userAgent:
-            "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36",
+        userAgent: userAgent,
       ),
       onWebViewCreated: (controller) {
         if (index < _controllers.length) {
           _controllers[index] = controller;
         }
-        controller.addUserScript(
-          userScript: UserScript(
-            source: _themeScript,
-            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          ),
-        );
       },
       onLoadStart: (controller, url) {
         if (index < _isLoadingList.length) {
@@ -275,6 +258,9 @@ class _AiHomeState extends State<AiHome> {
         }
       },
       onLoadStop: (controller, url) async {
+        controller.setSettings(
+          settings: InAppWebViewSettings(defaultFontSize: _defaultFontSize),
+        );
         final canGoBack = await controller.canGoBack();
         if (index < _isLoadingList.length) {
           setState(() {
@@ -289,20 +275,26 @@ class _AiHomeState extends State<AiHome> {
           });
         }
       },
-      onLoadError: (controller, url, code, message) {
-        if (index < _isLoadingList.length) {
-          setState(() {
-            _isLoadingList[index] = false;
-            _errorMessages[index] = 'Failed to load page. Error: $message';
-          });
+      onReceivedError: (controller, request, error) {
+        if (request.isForMainFrame ?? false) {
+          if (index < _isLoadingList.length) {
+            setState(() {
+              _isLoadingList[index] = false;
+              _errorMessages[index] = 'Failed to load page. Error: $error';
+            });
+          }
         }
       },
-      onLoadHttpError: (controller, url, statusCode, description) {
-        if (500 <= statusCode && statusCode < 600) return;
+      onReceivedHttpError: (controller, request, response) {
+        if ((400 <= response.statusCode! && response.statusCode! < 500) &&
+            response.statusCode != 404) {
+          return;
+        }
         if (index < _isLoadingList.length) {
           setState(() {
             _isLoadingList[index] = false;
-            _errorMessages[index] = 'HTTP Error $statusCode: $description';
+            _errorMessages[index] =
+                'HTTP Error ${response.statusCode}: ${response.reasonPhrase}';
           });
         }
       },
@@ -328,22 +320,28 @@ class _AiHomeState extends State<AiHome> {
 
   Future<bool> _onWillPop() async {
     if (_selectedIndex >= _controllers.length ||
-        _controllers[_selectedIndex] == null) {
+        _selectedIndex >= _controllers.length) {
       return true;
     }
 
     final currentController = _controllers[_selectedIndex];
 
-    if (currentController != null &&
-        _selectedIndex < _canGoBackList.length &&
-        _canGoBackList[_selectedIndex]) {
+    if (currentController == null ||
+        _selectedIndex >= _canGoBackList.length ||
+        !_canGoBackList[_selectedIndex]) {
+      return true;
+    }
+
+    try {
       final currentUrl = await currentController.getUrl();
       final initialUrl = _enabledAiList[_selectedIndex]['url'];
 
-      if (currentUrl != null && currentUrl.toString() != initialUrl) {
+      if (currentUrl != null && currentUrl != initialUrl) {
         await currentController.goBack();
         return false;
       }
+    } catch (e) {
+      debugPrint('Error in _onWillPop: $e');
     }
 
     return true;
@@ -428,8 +426,18 @@ class _AiHomeState extends State<AiHome> {
       );
     }
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (!didPop) {
+          final shouldPop = await _onWillPop();
+          if (shouldPop && context.mounted) {
+            Navigator.of(context).pop(result);
+          }
+        } else {
+          debugPrint('Pop occurred with result: $result');
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 60,
@@ -610,9 +618,8 @@ class _AiHomeState extends State<AiHome> {
                       ),
                     ),
                   ],
-                  elevation: 12,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ).then((value) async {
                   if (value == 'reload') {
