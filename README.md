@@ -49,8 +49,8 @@ It uses Material Design 3, automatic theme detection, and built-in WebView with 
 
 ### 🌙 Dark Theme
 <p>
-  <img src="screenshots/dark-theme/home.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.3);" />
   <img src="screenshots/dark-theme/drawer.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.3);" />
+  <img src="screenshots/dark-theme/home.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.3);" />
   <img src="screenshots/dark-theme/settings.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.3);" />
   <img src="screenshots/dark-theme/control.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.3);" />
 </p>
@@ -59,8 +59,8 @@ It uses Material Design 3, automatic theme detection, and built-in WebView with 
 
 ### ☀️ Light Theme
 <p>
-  <img src="screenshots/light-theme/home.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.2);" />
   <img src="screenshots/light-theme/drawer.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.2);" />
+  <img src="screenshots/light-theme/home.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.2);" />
   <img src="screenshots/light-theme/settings.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.2);" />
   <img src="screenshots/light-theme/control.jpg" width="45%" style="border-radius:12px; margin:6px; box-shadow:0 0 10px rgba(0,0,0,0.2);" />
 </p>
