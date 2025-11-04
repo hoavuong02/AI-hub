@@ -14,6 +14,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   bool loadLastOpenedAi = true;
   String defaultAiName = 'ChatGPT';
   List<Map<String, dynamic>> _enabledAiList = [];
+  String _fontSize = 'medium';
 
   @override
   void initState() {
@@ -24,8 +25,8 @@ class SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final shouldLoadLast = await SharedPrefs.getLoadLastOpenedAi();
     final defaultAi = await SharedPrefs.getDefaultAiName();
+    final fontSize = await SharedPrefs.getFontSize();
 
-    // Load enabled AI list
     _enabledAiList = [];
     for (var ai in aiList) {
       final isEnabled = await SharedPrefs.getAiStatus(ai['name']);
@@ -34,7 +35,6 @@ class SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    // If default AI is disabled, fallback to first enabled AI
     String finalDefaultAi = defaultAi;
     if (!_enabledAiList.any((ai) => ai['name'] == defaultAi) &&
         _enabledAiList.isNotEmpty) {
@@ -45,6 +45,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       loadLastOpenedAi = shouldLoadLast;
       defaultAiName = finalDefaultAi;
+      _fontSize = fontSize;
     });
   }
 
@@ -59,6 +60,13 @@ class SettingsScreenState extends State<SettingsScreen> {
     await SharedPrefs.setDefaultAiName(value);
     setState(() {
       defaultAiName = value;
+    });
+  }
+
+  Future<void> _updateFontSize(String value) async {
+    await SharedPrefs.setFontSize(value);
+    setState(() {
+      _fontSize = value;
     });
   }
 
@@ -187,10 +195,59 @@ class SettingsScreenState extends State<SettingsScreen> {
                   MaterialPageRoute(
                     builder: (context) => const AiControlScreen(),
                   ),
-                ).then(
-                  (_) => _loadSettings(),
-                ); // Reload settings when returning
+                ).then((_) => _loadSettings());
               },
+            ),
+          ),
+
+          const SizedBox(height: 24),
+          Text(
+            'WebView Settings',
+            style: theme.textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 3,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              leading: Icon(
+                Icons.text_fields_rounded,
+                color: theme.colorScheme.primary,
+              ),
+              title: const Text('WebView Font Size'),
+              subtitle: const Text('Adjust text size in AI WebView content'),
+              trailing: DropdownButton<String>(
+                borderRadius: BorderRadius.circular(12),
+                value: _fontSize,
+                items: fontSizes.keys.map<DropdownMenuItem<String>>((size) {
+                  return DropdownMenuItem<String>(
+                    value: size,
+                    child: Text(
+                      size
+                          .split('-')
+                          .map(
+                            (word) => word[0].toUpperCase() + word.substring(1),
+                          )
+                          .join('-'),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    _updateFontSize(value);
+                  }
+                },
+              ),
             ),
           ),
         ],
