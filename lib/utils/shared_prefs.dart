@@ -44,4 +44,14 @@ class SharedPrefs {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('lastAiName') ?? 'ChatGPT';
   }
+
+  static Future<void> setFontSize(String size) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('font_size', size);
+  }
+
+  static Future<String> getFontSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('font_size') ?? 'medium';
+  }
 }
