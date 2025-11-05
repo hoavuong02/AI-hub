@@ -627,6 +627,7 @@ class _AiHomeState extends State<AiHome> {
                   } else if (value == 'back') {
                     await _controllers[_selectedIndex]?.goBack();
                   } else if (value == 'settings') {
+                    if (!context.mounted) return;
                     Navigator.of(context)
                         .push(
                           MaterialPageRoute(

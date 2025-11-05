@@ -388,6 +388,7 @@ class CustomDrawer extends StatelessWidget {
                       if (await canLaunchUrl(url)) {
                         await launchUrl(url);
                       } else {
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Could not launch link'),
