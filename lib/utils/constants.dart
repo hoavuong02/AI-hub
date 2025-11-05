@@ -88,10 +88,11 @@ final List<Map<String, dynamic>> aiList = [
 ];
 
 final Map<String, int> fontSizes = {
-  'small': 14,
+  'x-small': 14,
+  'small': 15,
   'medium': 16,
-  'large': 18,
-  'x-large': 20,
+  'large': 17,
+  'x-large': 18,
 };
 
 final userAgent =
