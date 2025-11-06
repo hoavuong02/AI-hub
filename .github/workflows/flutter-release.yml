@@ -15,12 +15,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Install Flutter (recommended approach)
+      # 2. Install Flutter (official method)
       - name: Install Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 'stable'
-          cache: true
+        run: |
+          # Install dependencies
+          sudo apt update
+          sudo apt install -y wget git unzip
+          
+          # Download and install Flutter
+          wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz
+          tar xf flutter_linux_3.22.2-stable.tar.xz
+          echo "$(pwd)/flutter/bin" >> $GITHUB_PATH
+          
+          # Verify installation
+          flutter --version
 
       # 3. Install GitHub CLI
       - name: Install GitHub CLI
@@ -28,13 +36,13 @@ jobs:
           sudo apt update
           sudo apt install gh -y
 
-      # 4. Setup project
+      # 4. Setup Flutter and get dependencies
       - name: Setup Project
         run: |
           flutter doctor -v
           flutter pub get
 
-      # 5. Extract version
+      # 5. Extract version from pubspec.yaml
       - name: Get Version
         id: version
         run: |
@@ -47,15 +55,17 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      # 7. Create Release
+      # 7. Create GitHub Release and Upload APK
       - name: Create Release
         run: |
           TAG="v${{ steps.version.outputs.version }}"
           FILE="build/app/outputs/flutter-apk/app-release.apk"
           
+          echo "Creating APK release $TAG"
+          
           gh release create "$TAG" "$FILE" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Release $TAG" \
-            --notes "Automated APK release"
+            --notes "Automated APK release from GitHub Actions"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
