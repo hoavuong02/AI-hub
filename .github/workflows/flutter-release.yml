@@ -15,33 +15,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Install Flutter (fixed PATH issue)
+      # 2. Install Flutter (recommended approach)
       - name: Install Flutter
-        run: |
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1
-          echo "$(pwd)/flutter/bin" >> $GITHUB_PATH
-          # Reload PATH to make flutter available immediately
-          echo "$(pwd)/flutter/bin" >> $GITHUB_ENV
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+          cache: true
 
-      # 3. Verify Flutter installation
-      - name: Verify Flutter
-        run: |
-          which flutter
-          flutter --version
-
-      # 4. Install GitHub CLI
+      # 3. Install GitHub CLI
       - name: Install GitHub CLI
         run: |
           sudo apt update
           sudo apt install gh -y
 
-      # 5. Setup Flutter and get dependencies
+      # 4. Setup project
       - name: Setup Project
         run: |
           flutter doctor -v
           flutter pub get
 
-      # 6. Extract version from pubspec.yaml
+      # 5. Extract version
       - name: Get Version
         id: version
         run: |
@@ -50,26 +43,19 @@ jobs:
           echo "version=$SAFE_VERSION" >> $GITHUB_OUTPUT
           echo "App version: $SAFE_VERSION"
 
-      # 7. Build APK
+      # 6. Build APK
       - name: Build APK
         run: flutter build apk --release
 
-      # 8. Create GitHub Release and Upload APK
+      # 7. Create Release
       - name: Create Release
         run: |
           TAG="v${{ steps.version.outputs.version }}"
           FILE="build/app/outputs/flutter-apk/app-release.apk"
           
-          echo "Creating APK release $TAG"
-          
-          # Create release with APK
           gh release create "$TAG" "$FILE" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Release $TAG" \
-            --notes "Automated APK release from GitHub Actions
-            
-            Build Date: $(date)
-            Commit: $GITHUB_SHA
-            Workflow: $GITHUB_WORKFLOW"
+            --notes "Automated APK release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
