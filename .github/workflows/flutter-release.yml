@@ -14,7 +14,7 @@ jobs:
       - name: Setup Flutter (latest)
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: latest
+          channel: stable
 
       - name: Flutter Release Action
         uses: Oberhauser-Dev/flutter-release-action@v0
