@@ -9,10 +9,21 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Cache Flutter, NDK, CMake
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.flutter
+            ~/Android/Sdk/ndk
+            ~/Android/Sdk/cmake
+          key: flutter-cache-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: flutter-cache-${{ runner.os }}-
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -23,36 +34,44 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.7'  # Updated for Dart 3.9.2
+          flutter-version: '3.35.7'
+
+      - name: Clean Project
+        run: flutter clean
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK
+      - name: Build Fat APK
         run: flutter build apk --release
 
-      - name: Extract version from pubspec.yaml
-        id: extract_version
+      - name: Build Split APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Get Version
+        id: version
         run: |
-          VERSION=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d '+' -f 1)
-          echo "VERSION=v$VERSION" >> $GITHUB_OUTPUT
+          FULL=$(grep 'version:' pubspec.yaml | awk '{print $2}')
+          echo "full=$FULL" >> $GITHUB_OUTPUT
+          echo "tag=v$(echo $FULL | cut -d'+' -f1)" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
         id: check_tag
         run: |
-          if git rev-parse ${{ steps.extract_version.outputs.VERSION }} >/dev/null 2>&1; then
-            echo "Tag ${{ steps.extract_version.outputs.VERSION }} already exists. Skipping release."
+          if git rev-parse ${{ steps.version.outputs.tag }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release and Upload APK
+      - name: Create Release and Upload All APKs
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.extract_version.outputs.VERSION }}
-          name: Release ${{ steps.extract_version.outputs.VERSION }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
           draft: false
           prerelease: false
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-*-release.apk
