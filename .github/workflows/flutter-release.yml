@@ -15,50 +15,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Cache Flutter SDK
-      - name: Cache Flutter SDK
-        uses: actions/cache@v3
-        with:
-          path: /home/runner/flutter
-          key: flutter-stable-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            flutter-stable-
-
-      # 3. Cache Pub dependencies
-      - name: Cache Pub dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pub-cache
-          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            pub-${{ runner.os }}-
-
-      # 4. Install Flutter (only if cache miss)
+      # 2. Install Flutter
       - name: Install Flutter
         run: |
-          if [ ! -d "/home/runner/flutter" ]; then
-            echo "Flutter not cached, installing..."
-            git clone https://github.com/flutter/flutter.git -b stable --depth 1 /home/runner/flutter
-          else
-            echo "Flutter found in cache"
-          fi
-          echo "/home/runner/flutter/bin" >> $GITHUB_PATH
+          git clone https://github.com/flutter/flutter.git -b stable --depth 1
+          echo "$PWD/flutter/bin" >> $GITHUB_PATH
           flutter --version
 
-      # 5. Install GitHub CLI
+      # 3. Install GitHub CLI
       - name: Install GitHub CLI
         run: |
           sudo apt update
           sudo apt install gh -y
 
-      # 6. Setup Flutter and get dependencies
+      # 4. Setup Flutter and get dependencies
       - name: Setup Project
         run: |
           flutter doctor -v
           flutter pub get
 
-      # 7. Extract version from pubspec.yaml
+      # 5. Extract version from pubspec.yaml
       - name: Get Version
         id: version
         run: |
@@ -67,11 +43,11 @@ jobs:
           echo "version=$SAFE_VERSION" >> $GITHUB_OUTPUT
           echo "App version: $SAFE_VERSION"
 
-      # 8. Build APK
+      # 6. Build APK
       - name: Build APK
         run: flutter build apk --release
 
-      # 9. Create GitHub Release and Upload APK
+      # 7. Create GitHub Release and Upload APK
       - name: Create Release
         run: |
           TAG="v${{ steps.version.outputs.version }}"
