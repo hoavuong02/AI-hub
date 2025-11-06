@@ -15,26 +15,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Install Flutter
+      # 2. Install Flutter (fixed PATH issue)
       - name: Install Flutter
         run: |
           git clone https://github.com/flutter/flutter.git -b stable --depth 1
-          echo "$PWD/flutter/bin" >> $GITHUB_PATH
+          echo "$(pwd)/flutter/bin" >> $GITHUB_PATH
+          # Reload PATH to make flutter available immediately
+          echo "$(pwd)/flutter/bin" >> $GITHUB_ENV
+
+      # 3. Verify Flutter installation
+      - name: Verify Flutter
+        run: |
+          which flutter
           flutter --version
 
-      # 3. Install GitHub CLI
+      # 4. Install GitHub CLI
       - name: Install GitHub CLI
         run: |
           sudo apt update
           sudo apt install gh -y
 
-      # 4. Setup Flutter and get dependencies
+      # 5. Setup Flutter and get dependencies
       - name: Setup Project
         run: |
           flutter doctor -v
           flutter pub get
 
-      # 5. Extract version from pubspec.yaml
+      # 6. Extract version from pubspec.yaml
       - name: Get Version
         id: version
         run: |
@@ -43,11 +50,11 @@ jobs:
           echo "version=$SAFE_VERSION" >> $GITHUB_OUTPUT
           echo "App version: $SAFE_VERSION"
 
-      # 6. Build APK
+      # 7. Build APK
       - name: Build APK
         run: flutter build apk --release
 
-      # 7. Create GitHub Release and Upload APK
+      # 8. Create GitHub Release and Upload APK
       - name: Create Release
         run: |
           TAG="v${{ steps.version.outputs.version }}"
