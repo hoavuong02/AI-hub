@@ -1,71 +1,55 @@
-name: Flutter Build and Release APK
+name: Release Flutter APK
 
 on:
-  workflow_dispatch
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  build-release:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout your code
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Install Flutter (official method)
-      - name: Install Flutter
-        run: |
-          # Install dependencies
-          sudo apt update
-          sudo apt install -y wget git unzip
-          
-          # Download and install Flutter
-          wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz
-          tar xf flutter_linux_3.22.2-stable.tar.xz
-          echo "$(pwd)/flutter/bin" >> $GITHUB_PATH
-          
-          # Verify installation
-          flutter --version
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-      # 3. Install GitHub CLI
-      - name: Install GitHub CLI
-        run: |
-          sudo apt update
-          sudo apt install gh -y
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'  # Change if needed
 
-      # 4. Setup Flutter and get dependencies
-      - name: Setup Project
-        run: |
-          flutter doctor -v
-          flutter pub get
+      - name: Install dependencies
+        run: flutter pub get
 
-      # 5. Extract version from pubspec.yaml
-      - name: Get Version
-        id: version
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
-          SAFE_VERSION=$(echo "$VERSION" | tr '+' '-')
-          echo "version=$SAFE_VERSION" >> $GITHUB_OUTPUT
-          echo "App version: $SAFE_VERSION"
-
-      # 6. Build APK
       - name: Build APK
         run: flutter build apk --release
 
-      # 7. Create GitHub Release and Upload APK
-      - name: Create Release
+      - name: Extract version from pubspec.yaml
+        id: extract_version
         run: |
-          TAG="v${{ steps.version.outputs.version }}"
-          FILE="build/app/outputs/flutter-apk/app-release.apk"
-          
-          echo "Creating APK release $TAG"
-          
-          gh release create "$TAG" "$FILE" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Release $TAG" \
-            --notes "Automated APK release from GitHub Actions"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d '+' -f 1)
+          echo "VERSION=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse ${{ steps.extract_version.outputs.VERSION }} >/dev/null 2>&1; then
+            echo "Tag ${{ steps.extract_version.outputs.VERSION }} already exists. Skipping release."
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release and Upload APK
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.extract_version.outputs.VERSION }}
+          name: Release ${{ steps.extract_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          files: build/app/outputs/flutter-apk/app-release.apk
