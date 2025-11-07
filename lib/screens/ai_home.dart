@@ -275,26 +275,20 @@ class _AiHomeState extends State<AiHome> {
           });
         }
       },
-      onReceivedError: (controller, request, error) {
-        if (request.isForMainFrame ?? false) {
-          if (index < _isLoadingList.length) {
-            setState(() {
-              _isLoadingList[index] = false;
-              _errorMessages[index] = 'Failed to load page. Error: $error';
-            });
-          }
-        }
-      },
-      onReceivedHttpError: (controller, request, response) {
-        if ((400 <= response.statusCode! && response.statusCode! < 500) &&
-            response.statusCode != 404) {
-          return;
-        }
+      onLoadError: (controller, url, code, message) {
         if (index < _isLoadingList.length) {
           setState(() {
             _isLoadingList[index] = false;
-            _errorMessages[index] =
-                'HTTP Error ${response.statusCode}: ${response.reasonPhrase}';
+            _errorMessages[index] = 'Failed to load page. Error: $message';
+          });
+        }
+      },
+      onLoadHttpError: (controller, url, statusCode, description) {
+        if (500 <= statusCode && statusCode < 600) return;
+        if (index < _isLoadingList.length) {
+          setState(() {
+            _isLoadingList[index] = false;
+            _errorMessages[index] = 'HTTP Error $statusCode: $description';
           });
         }
       },
