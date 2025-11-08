@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+final String name = "AI Hub";
+
 final List<Map<String, dynamic>> aiList = [
   {
     'name': 'ChatGPT',
@@ -82,7 +84,7 @@ final List<Map<String, dynamic>> aiList = [
     "name": "Blackbox",
     "url": "https://www.blackbox.ai/",
     "icon": Icons.terminal,
-    "color": Colors.grey[800]!,
+    "color": Colors.blueGrey,
     "desc": "AI code generator",
   },
 ];

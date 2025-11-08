@@ -21,7 +21,7 @@ class _AiHomeState extends State<AiHome> {
   final List<bool> _hasBeenLoadedList = [];
   final List<String?> _errorMessages = [];
   final List<bool> _canGoBackList = [];
-  String _currentDomain = 'AI Hub';
+  String _currentDomain = name;
   List<Map<String, dynamic>> _enabledAiList = [];
   int _defaultFontSize = 16;
 
@@ -158,7 +158,7 @@ class _AiHomeState extends State<AiHome> {
       final uri = Uri.parse(url);
       return uri.host;
     } catch (e) {
-      return 'AI Hub';
+      return name;
     }
   }
 
@@ -253,7 +253,7 @@ class _AiHomeState extends State<AiHome> {
         }
         if (index == _selectedIndex) {
           setState(() {
-            _currentDomain = url?.host ?? 'AI Hub';
+            _currentDomain = url?.host ?? name;
           });
         }
       },
@@ -271,7 +271,7 @@ class _AiHomeState extends State<AiHome> {
         }
         if (index == _selectedIndex) {
           setState(() {
-            _currentDomain = url?.host ?? 'AI Hub';
+            _currentDomain = url?.host ?? name;
           });
         }
       },
@@ -302,7 +302,7 @@ class _AiHomeState extends State<AiHome> {
         }
         if (index == _selectedIndex) {
           setState(() {
-            _currentDomain = url?.host ?? 'AI Hub';
+            _currentDomain = url?.host ?? name;
           });
         }
       },
@@ -375,7 +375,7 @@ class _AiHomeState extends State<AiHome> {
 
     if (_enabledAiList.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('AI Hub'), centerTitle: true),
+        appBar: AppBar(title: Text(name), centerTitle: true),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -464,7 +464,7 @@ class _AiHomeState extends State<AiHome> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'AI Hub',
+                      name,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,

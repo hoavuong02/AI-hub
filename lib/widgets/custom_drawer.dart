@@ -50,7 +50,6 @@ class CustomDrawer extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Header
             Container(
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 20,
@@ -84,7 +83,7 @@ class CustomDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'AI Hub',
+                          name,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.onPrimaryContainer,
@@ -103,8 +102,6 @@ class CustomDrawer extends StatelessWidget {
                 ],
               ),
             ),
-
-            // AI List
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -348,8 +345,6 @@ class CustomDrawer extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Footer
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -383,7 +378,7 @@ class CustomDrawer extends StatelessWidget {
                   GestureDetector(
                     onTap: () async {
                       final url = Uri.parse(
-                        'https://www.github.com/SilentCoderHere/AI-Hub',
+                        'https://www.github.com/SilentCoderHere/',
                       );
                       if (await canLaunchUrl(url)) {
                         await launchUrl(url);
