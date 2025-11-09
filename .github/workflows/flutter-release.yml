@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # 🔴 FIX 1: Added token for push permissions
 
       - name: Cache Flutter, NDK, CMake
         uses: actions/cache@v4
@@ -35,6 +37,53 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.7'
+          cache: true  # 🔴 FIX 2: Enable Flutter caching
+
+      - name: Get Current Version with Timestamp Build
+        id: version
+        run: |
+          # Extract current version from pubspec.yaml
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}')  # 🔴 FIX 3: More precise grep
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Split version and build number
+          VERSION_PART=$(echo $CURRENT_VERSION | cut -d'+' -f1)
+          
+          # Generate timestamp build number (YYYYMMDDHHMM)
+          TIMESTAMP_BUILD=$(date -u +%Y%m%d%H%M)
+          
+          NEW_VERSION="$VERSION_PART+$TIMESTAMP_BUILD"
+          
+          echo "New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_part=$VERSION_PART" >> $GITHUB_OUTPUT
+          echo "build_part=$TIMESTAMP_BUILD" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION_PART" >> $GITHUB_OUTPUT
+
+      - name: Update Version in pubspec.yaml
+        run: |
+          # Update the version in pubspec.yaml
+          sed -i "s/^version: .*/version: ${{ steps.version.outputs.new_version }}/" pubspec.yaml  # 🔴 FIX 4: More precise sed
+          
+          # Verify the change
+          echo "Updated pubspec.yaml:"
+          grep '^version:' pubspec.yaml
+
+      - name: Configure Git for commits
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Commit Version Bump
+        run: |
+          git add pubspec.yaml
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "ci: release ${{ steps.version.outputs.new_version }}"
+            git push
+          fi
 
       - name: Clean Project
         run: flutter clean
@@ -42,22 +91,19 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Verify Flutter installation
+        run: flutter doctor -v  # 🔴 FIX 5: Verify Flutter setup
+
       - name: Build Fat APK
         run: flutter build apk --release
 
       - name: Build Split APKs
         run: flutter build apk --release --split-per-abi
 
-      - name: Get Version
-        id: version
-        run: |
-          FULL=$(grep 'version:' pubspec.yaml | awk '{print $2}')
-          echo "full=$FULL" >> $GITHUB_OUTPUT
-          echo "tag=v$(echo $FULL | cut -d'+' -f1)" >> $GITHUB_OUTPUT
-
       - name: Check if tag exists
         id: check_tag
         run: |
+          git fetch --tags  # 🔴 FIX 6: Fetch latest tags
           if git rev-parse ${{ steps.version.outputs.tag }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
@@ -74,4 +120,6 @@ jobs:
           prerelease: false
           files: |
             build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/flutter-apk/app-*-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
