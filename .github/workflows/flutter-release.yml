@@ -76,12 +76,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Verify APK Signature
-        run: |
-          echo "=== Verifying APK Signature ==="
-          keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep -A5 "Certificate fingerprints"
-
+      
       - name: Check if tag exists
         id: check_tag
         run: |
