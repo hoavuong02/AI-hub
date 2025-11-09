@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # 🔴 FIX 1: Added token for push permissions
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Flutter, NDK, CMake
         uses: actions/cache@v4
@@ -37,33 +37,33 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.7'
-          cache: true  # 🔴 FIX 2: Enable Flutter caching
+          cache: true
 
-      - name: Get Current Version with Timestamp Build
+      - name: Get Current Version with Unix Timestamp Build
         id: version
         run: |
           # Extract current version from pubspec.yaml
-          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}')  # 🔴 FIX 3: More precise grep
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}')
           echo "Current version: $CURRENT_VERSION"
           
           # Split version and build number
           VERSION_PART=$(echo $CURRENT_VERSION | cut -d'+' -f1)
           
-          # Generate timestamp build number (YYYYMMDDHHMM)
-          TIMESTAMP_BUILD=$(date -u +%Y%m%d%H%M)
+          # Generate Unix timestamp (seconds since 1970)
+          UNIX_TIMESTAMP=$(date -u +%s)
           
-          NEW_VERSION="$VERSION_PART+$TIMESTAMP_BUILD"
+          NEW_VERSION="$VERSION_PART+$UNIX_TIMESTAMP"
           
           echo "New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_part=$VERSION_PART" >> $GITHUB_OUTPUT
-          echo "build_part=$TIMESTAMP_BUILD" >> $GITHUB_OUTPUT
+          echo "build_part=$UNIX_TIMESTAMP" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION_PART" >> $GITHUB_OUTPUT
 
       - name: Update Version in pubspec.yaml
         run: |
           # Update the version in pubspec.yaml
-          sed -i "s/^version: .*/version: ${{ steps.version.outputs.new_version }}/" pubspec.yaml  # 🔴 FIX 4: More precise sed
+          sed -i "s/^version: .*/version: ${{ steps.version.outputs.new_version }}/" pubspec.yaml
           
           # Verify the change
           echo "Updated pubspec.yaml:"
@@ -77,7 +77,6 @@ jobs:
       - name: Commit Version Bump
         run: |
           git add pubspec.yaml
-          # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
@@ -92,7 +91,7 @@ jobs:
         run: flutter pub get
 
       - name: Verify Flutter installation
-        run: flutter doctor -v  # 🔴 FIX 5: Verify Flutter setup
+        run: flutter doctor -v
 
       - name: Build Fat APK
         run: flutter build apk --release
@@ -103,7 +102,7 @@ jobs:
       - name: Check if tag exists
         id: check_tag
         run: |
-          git fetch --tags  # 🔴 FIX 6: Fetch latest tags
+          git fetch --tags
           if git rev-parse ${{ steps.version.outputs.tag }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
