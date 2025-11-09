@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:aihub/utils/constants.dart';
 import 'package:aihub/utils/shared_prefs.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -78,6 +79,26 @@ class SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  String? _sameSiteToString(HTTPCookieSameSitePolicy? policy) {
+    if (policy == null) return null;
+    return switch (policy) {
+      HTTPCookieSameSitePolicy.LAX => 'LAX',
+      HTTPCookieSameSitePolicy.STRICT => 'STRICT',
+      HTTPCookieSameSitePolicy.NONE => 'NONE',
+      _ => null,
+    };
+  }
+
+  HTTPCookieSameSitePolicy? _stringToSameSite(String? str) {
+    if (str == null) return null;
+    return switch (str) {
+      'LAX' => HTTPCookieSameSitePolicy.LAX,
+      'STRICT' => HTTPCookieSameSitePolicy.STRICT,
+      'NONE' => HTTPCookieSameSitePolicy.NONE,
+      _ => null,
+    };
+  }
+
   Future<void> _backupSettings() async {
     setState(() {
       _isBackingUp = true;
@@ -85,25 +106,51 @@ class SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final settings = await SharedPrefs.getAllSettings();
+      final cookieManager = CookieManager.instance();
+      final webCookies = <String, List<Map<String, dynamic>>>{};
 
-      final settingsJson = jsonEncode(settings);
+      for (var ai in aiList) {
+        final url = ai['url'] as String;
+        final uri = WebUri(url);
+        final domain = Uri.parse(url).host;
+
+        final cookies = await cookieManager.getCookies(url: uri);
+        if (cookies.isNotEmpty) {
+          webCookies[domain] = cookies
+              .map(
+                (c) => {
+                  'name': c.name,
+                  'value': c.value,
+                  'domain': c.domain,
+                  'path': c.path,
+                  'expiresDate': c.expiresDate,
+                  'isSecure': c.isSecure,
+                  'isHttpOnly': c.isHttpOnly,
+                  'sameSite': _sameSiteToString(c.sameSite),
+                },
+              )
+              .toList();
+        }
+      }
+
+      final backupData = {
+        'app_settings': settings,
+        'webview_cookies': webCookies,
+      };
 
       final directory = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final backupFile = File('${directory.path}/aihub_backup_$timestamp.json');
-      await backupFile.writeAsString(settingsJson);
+      final file = File('${directory.path}/aihub_backup_$timestamp.json');
+      await file.writeAsString(jsonEncode(backupData));
 
       await SharePlus.instance.share(
-        ShareParams(
-          text: 'AIHub Settings Backup',
-          files: [XFile(backupFile.path)],
-        ),
+        ShareParams(text: 'AIHub Backup', files: [XFile(file.path)]),
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Settings backed up successfully!'),
+            content: Text('Backup created!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -112,17 +159,16 @@ class SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to backup settings: $e'),
+            content: Text('Backup failed: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted)
         setState(() {
           _isBackingUp = false;
         });
-      }
     }
   }
 
@@ -132,20 +178,20 @@ class SettingsScreenState extends State<SettingsScreen> {
     });
 
     try {
-      final shouldRestore = await showDialog<bool>(
+      final confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Restore Settings'),
+          title: const Text('Restore Backup'),
           content: const Text(
-            'This will overwrite all your current settings. Are you sure you want to continue?',
+            'This will replace all settings and logins. Continue?',
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
@@ -156,7 +202,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         ),
       );
 
-      if (shouldRestore != true) {
+      if (confirm != true) {
         setState(() {
           _isRestoring = false;
         });
@@ -166,59 +212,79 @@ class SettingsScreenState extends State<SettingsScreen> {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
-        allowMultiple: false,
       );
 
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
-        final content = await file.readAsString();
+      if (result == null || result.files.single.path == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No file selected'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() {
+          _isRestoring = false;
+        });
+        return;
+      }
 
-        if (content.isEmpty) {
-          throw Exception('Backup file is empty');
+      final file = File(result.files.single.path!);
+      final content = await file.readAsString();
+      final data = jsonDecode(content) as Map<String, dynamic>;
+
+      final appSettings = data['app_settings'] as Map<String, dynamic>;
+      final rawCookies = data['webview_cookies'] as Map<String, dynamic>?;
+
+      // Restore app settings
+      await SharedPrefs.restoreSettings(appSettings);
+
+      // Restore cookies
+      if (rawCookies != null && rawCookies.isNotEmpty) {
+        final cookieManager = CookieManager.instance();
+        for (var entry in rawCookies.entries) {
+          final domain = entry.key;
+          final cookies = entry.value as List;
+          final uri = WebUri('https://$domain');
+
+          for (var c in cookies) {
+            final map = c as Map<String, dynamic>;
+            await cookieManager.setCookie(
+              url: uri,
+              name: map['name'],
+              value: map['value'],
+              domain: map['domain'],
+              path: map['path'] ?? '/',
+              expiresDate: map['expiresDate'],
+              isSecure: map['isSecure'] ?? false,
+              isHttpOnly: map['isHttpOnly'] ?? false,
+              sameSite: _stringToSameSite(map['sameSite']),
+            );
+          }
         }
+      }
 
-        final decodedJson = jsonDecode(content);
-        if (decodedJson is! Map<String, dynamic>) {
-          throw Exception('Invalid backup file format');
-        }
-
-        await SharedPrefs.restoreSettings(decodedJson);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Settings restored successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          _loadSettings();
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No backup file selected.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Restored! Restart app to see changes.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadSettings();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to restore settings: $e'),
+            content: Text('Restore failed: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted)
         setState(() {
           _isRestoring = false;
         });
-      }
     }
   }
 

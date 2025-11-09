@@ -217,6 +217,30 @@ class _AiHomeState extends State<AiHome> {
     _controllers[index]?.reload();
   }
 
+  String? _sameSiteToString(HTTPCookieSameSitePolicy? policy) {
+    if (policy == null) return null;
+    switch (policy) {
+      case HTTPCookieSameSitePolicy.LAX:
+        return 'LAX';
+      case HTTPCookieSameSitePolicy.STRICT:
+        return 'STRICT';
+      case HTTPCookieSameSitePolicy.NONE:
+        return 'NONE';
+      default:
+        return null;
+    }
+  }
+
+  HTTPCookieSameSitePolicy? _stringToSameSite(String? str) {
+    if (str == null) return null;
+    return switch (str) {
+      'LAX' => HTTPCookieSameSitePolicy.LAX,
+      'STRICT' => HTTPCookieSameSitePolicy.STRICT,
+      'NONE' => HTTPCookieSameSitePolicy.NONE,
+      _ => null,
+    };
+  }
+
   Widget _buildWebView(int index) {
     if (index < 0 || index >= _enabledAiList.length) {
       return _buildPlaceholder(0);
@@ -239,9 +263,31 @@ class _AiHomeState extends State<AiHome> {
         supportZoom: false,
         userAgent: userAgent,
       ),
-      onWebViewCreated: (controller) {
+      onWebViewCreated: (controller) async {
         if (index < _controllers.length) {
           _controllers[index] = controller;
+        }
+
+        // RESTORE COOKIES FOR THIS DOMAIN
+        final domain = Uri.parse(_enabledAiList[index]['url']).host;
+        final savedCookies = await SharedPrefs.getWebViewCookies();
+        final cookiesForDomain = savedCookies?[domain];
+
+        if (cookiesForDomain != null) {
+          final uri = WebUri(_enabledAiList[index]['url']);
+          for (var data in cookiesForDomain) {
+            await CookieManager.instance().setCookie(
+              url: uri,
+              name: data['name'],
+              value: data['value'],
+              domain: data['domain'],
+              path: data['path'] ?? '/',
+              expiresDate: data['expiresDate'],
+              isSecure: data['isSecure'] ?? false,
+              isHttpOnly: data['isHttpOnly'] ?? false,
+              sameSite: _stringToSameSite(data['sameSite']),
+            );
+          }
         }
       },
       onLoadStart: (controller, url) {
@@ -274,6 +320,30 @@ class _AiHomeState extends State<AiHome> {
             _currentDomain = url?.host ?? name;
           });
         }
+
+        final domain = Uri.parse(_enabledAiList[index]['url']).host;
+        final allCookies = await CookieManager.instance().getCookies(
+          url: WebUri(url.toString()),
+        );
+
+        final cookieMaps = allCookies
+            .map(
+              (c) => {
+                'name': c.name,
+                'value': c.value,
+                'domain': c.domain,
+                'path': c.path,
+                'expiresDate': c.expiresDate,
+                'isSecure': c.isSecure,
+                'isHttpOnly': c.isHttpOnly,
+                'sameSite': _sameSiteToString(c.sameSite),
+              },
+            )
+            .toList();
+
+        final currentCookies = await SharedPrefs.getWebViewCookies() ?? {};
+        currentCookies[domain] = cookieMaps;
+        await SharedPrefs.saveWebViewCookies(currentCookies);
       },
       onLoadError: (controller, url, code, message) {
         if (index < _isLoadingList.length) {

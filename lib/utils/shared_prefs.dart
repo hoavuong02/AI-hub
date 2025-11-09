@@ -9,6 +9,7 @@ class SharedPrefs {
   static const String _lastAiNameKey = 'lastAiName';
   static const String _fontSizeKey = 'font_size';
   static const String _aiStatusListKey = 'ai_status_list';
+  static const String _cookiesKey = 'webview_cookies';
 
   static Future<bool> getLoadLastOpenedAi() async {
     final prefs = await SharedPreferences.getInstance();
@@ -156,5 +157,38 @@ class SharedPrefs {
   static Future<bool> hasEnabledAis() async {
     final enabledAis = await getEnabledAis();
     return enabledAis.isNotEmpty;
+  }
+
+  static Future<void> saveWebViewCookies(
+    Map<String, List<Map<String, dynamic>>> cookies,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_cookiesKey, jsonEncode(cookies));
+  }
+
+  // Get cookies (called from Settings)
+  static Future<Map<String, List<Map<String, dynamic>>>?>
+  getWebViewCookies() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_cookiesKey);
+    if (jsonStr == null) return null;
+
+    final Map<dynamic, dynamic> raw = jsonDecode(jsonStr);
+    final result = <String, List<Map<String, dynamic>>>{};
+
+    raw.forEach((key, value) {
+      if (key is String && value is List) {
+        result[key] = value
+            .map((e) => (e as Map).cast<String, dynamic>())
+            .toList();
+      }
+    });
+    return result;
+  }
+
+  // Clear cookies (optional)
+  static Future<void> clearWebViewCookies() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cookiesKey);
   }
 }
