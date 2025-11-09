@@ -17,16 +17,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Cache Flutter, NDK, CMake
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.flutter
-            ~/Android/Sdk/ndk
-            ~/Android/Sdk/cmake
-          key: flutter-cache-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
-          restore-keys: flutter-cache-${{ runner.os }}-
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -36,40 +26,30 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.7'
+          flutter-version: '3.19.5'
           cache: true
 
-      - name: Get Current Version with Unix Timestamp Build
+      - name: Create Keystore from Secrets
+        run: |
+          echo "${{ secrets.KEYSTORE }}" | base64 -d > android/app/upload-keystore.jks
+
+      - name: Get Current Version and Increment Build
         id: version
         run: |
-          # Extract current version from pubspec.yaml
           CURRENT_VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}')
-          echo "Current version: $CURRENT_VERSION"
-          
-          # Split version and build number
           VERSION_PART=$(echo $CURRENT_VERSION | cut -d'+' -f1)
-          
-          # Generate Unix timestamp (seconds since 1970)
-          UNIX_TIMESTAMP=$(date -u +%s)
-          
-          NEW_VERSION="$VERSION_PART+$UNIX_TIMESTAMP"
-          
-          echo "New version: $NEW_VERSION"
+          CURRENT_BUILD=$(echo $CURRENT_VERSION | cut -d'+' -f2)
+          NEW_BUILD=$((CURRENT_BUILD + 1))
+          NEW_VERSION="$VERSION_PART+$NEW_BUILD"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "version_part=$VERSION_PART" >> $GITHUB_OUTPUT
-          echo "build_part=$UNIX_TIMESTAMP" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION_PART" >> $GITHUB_OUTPUT
 
       - name: Update Version in pubspec.yaml
         run: |
-          # Update the version in pubspec.yaml
           sed -i "s/^version: .*/version: ${{ steps.version.outputs.new_version }}/" pubspec.yaml
-          
-          # Verify the change
-          echo "Updated pubspec.yaml:"
-          grep '^version:' pubspec.yaml
+          echo "Updated to: ${{ steps.version.outputs.new_version }}"
 
-      - name: Configure Git for commits
+      - name: Configure Git
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
@@ -77,27 +57,30 @@ jobs:
       - name: Commit Version Bump
         run: |
           git add pubspec.yaml
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "ci: release ${{ steps.version.outputs.new_version }}"
-            git push
-          fi
+          git commit -m "ci: release ${{ steps.version.outputs.new_version }}"
+          git push
 
-      - name: Clean Project
-        run: flutter clean
-
-      - name: Install dependencies
+      - name: Install Dependencies
         run: flutter pub get
 
-      - name: Verify Flutter installation
-        run: flutter doctor -v
-
-      - name: Build Fat APK
+      - name: Build Release APK
         run: flutter build apk --release
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Build Split APKs
         run: flutter build apk --release --split-per-abi
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Verify APK Signature
+        run: |
+          echo "=== Verifying APK Signature ==="
+          keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep -A5 "Certificate fingerprints"
 
       - name: Check if tag exists
         id: check_tag
@@ -109,14 +92,12 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release and Upload All APKs
+      - name: Create Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: Release ${{ steps.version.outputs.tag }}
-          draft: false
-          prerelease: false
           files: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
