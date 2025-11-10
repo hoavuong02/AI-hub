@@ -71,8 +71,7 @@ It uses Material Design 3, automatic theme detection, and built-in WebView with 
 
 ## 🔧 Planned Additions
 
-- 🚫 Ad and tracker blocker  
-- ☁️ Backup and restore for cookies and preferences
+- 🚫 Ad and tracker blocker (**looking for contributors**) 
 
 ---
 
