@@ -1,6 +1,9 @@
 import 'package:aihub/screens/settings.dart';
+import 'package:aihub/utils/download_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:share_plus/share_plus.dart';
 import '../utils/constants.dart';
 import '../utils/shared_prefs.dart';
 import '../widgets/custom_drawer.dart';
@@ -14,16 +17,17 @@ class AiHome extends StatefulWidget {
 }
 
 class _AiHomeState extends State<AiHome> {
-  int _selectedIndex = 0;
   final List<InAppWebViewController?> _controllers = [];
   final List<String> _currentUrls = [];
   final List<bool> _isLoadingList = [];
   final List<bool> _hasBeenLoadedList = [];
   final List<String?> _errorMessages = [];
   final List<bool> _canGoBackList = [];
-  String _currentDomain = name;
   List<Map<String, dynamic>> _enabledAiList = [];
+  final DownloadManager _downloadManager = DownloadManager();
+  String _currentDomain = name;
   int _defaultFontSize = 16;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -264,11 +268,17 @@ class _AiHomeState extends State<AiHome> {
         userAgent: userAgent,
       ),
       onWebViewCreated: (controller) async {
+        controller.addJavaScriptHandler(
+          handlerName: 'shareHandler',
+          callback: (args) {
+            _handleShareData(args[0]);
+          },
+        );
+
         if (index < _controllers.length) {
           _controllers[index] = controller;
         }
 
-        // RESTORE COOKIES FOR THIS DOMAIN
         final domain = Uri.parse(_enabledAiList[index]['url']).host;
         final savedCookies = await SharedPrefs.getWebViewCookies();
         final cookiesForDomain = savedCookies?[domain];
@@ -304,6 +314,8 @@ class _AiHomeState extends State<AiHome> {
         }
       },
       onLoadStop: (controller, url) async {
+        await controller.evaluateJavascript(source: shareOverrideJS);
+
         controller.setSettings(
           settings: InAppWebViewSettings(defaultFontSize: _defaultFontSize),
         );
@@ -379,36 +391,82 @@ class _AiHomeState extends State<AiHome> {
       shouldOverrideUrlLoading: (controller, navigationAction) async {
         return NavigationActionPolicy.ALLOW;
       },
+      onDownloadStartRequest: (controller, downloadStartRequest) async {
+        final url = downloadStartRequest.url.toString();
+        final fileName =
+            downloadStartRequest.suggestedFilename ?? 'download.file';
+
+        bool hasPermission = await AwesomeNotifications()
+            .isNotificationAllowed();
+        if (mounted) {
+          if (!hasPermission) {
+            await _downloadManager.downloadFile(
+              context,
+              url,
+              fileName,
+              showNotification: false,
+            );
+          } else {
+            await _downloadManager.downloadFile(context, url, fileName);
+          }
+        }
+      },
     );
   }
 
-  Future<bool> _onWillPop() async {
+  void _handleBackNavigation() async {
     if (_selectedIndex >= _controllers.length ||
-        _selectedIndex >= _controllers.length) {
-      return true;
-    }
-
-    final currentController = _controllers[_selectedIndex];
-
-    if (currentController == null ||
-        _selectedIndex >= _canGoBackList.length ||
-        !_canGoBackList[_selectedIndex]) {
-      return true;
+        _controllers[_selectedIndex] == null) {
+      if (mounted) Navigator.of(context).pop();
+      return;
     }
 
     try {
-      final currentUrl = await currentController.getUrl();
-      final initialUrl = _enabledAiList[_selectedIndex]['url'];
-
-      if (currentUrl != null && currentUrl != initialUrl) {
-        await currentController.goBack();
-        return false;
+      final canGoBack = await _controllers[_selectedIndex]!.canGoBack();
+      if (canGoBack) {
+        _controllers[_selectedIndex]!.goBack();
+      } else {
+        if (mounted) Navigator.of(context).pop();
       }
     } catch (e) {
-      debugPrint('Error in _onWillPop: $e');
+      if (mounted) Navigator.of(context).pop();
     }
+  }
 
-    return true;
+  void _handleShareData(dynamic shareData) {
+    debugPrint('Received share data: $shareData');
+
+    try {
+      String shareText = '';
+
+      if (shareData is Map) {
+        final title = shareData['title']?.toString() ?? '';
+        final text = shareData['text']?.toString() ?? '';
+        final url = shareData['url']?.toString() ?? '';
+
+        if (text.isNotEmpty && url.isNotEmpty) {
+          shareText = '$text\n$url';
+        } else if (text.isNotEmpty) {
+          shareText = text;
+        } else if (title.isNotEmpty && url.isNotEmpty) {
+          shareText = '$title\n$url';
+        } else if (url.isNotEmpty) {
+          shareText = url;
+        } else {
+          shareText = title;
+        }
+      } else if (shareData is String) {
+        shareText = shareData;
+      }
+
+      if (shareText.trim().isNotEmpty) {
+        SharePlus.instance.share(ShareParams(text: shareText));
+      } else {
+        debugPrint('No share content found');
+      }
+    } catch (e) {
+      debugPrint('Error handling share data: $e');
+    }
   }
 
   @override
@@ -491,13 +549,13 @@ class _AiHomeState extends State<AiHome> {
     }
 
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+      canPop:
+          _canGoBackList.isNotEmpty && _selectedIndex < _canGoBackList.length
+          ? !_canGoBackList[_selectedIndex]
+          : true,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
         if (!didPop) {
-          final shouldPop = await _onWillPop();
-          if (shouldPop && context.mounted) {
-            Navigator.of(context).pop(result);
-          }
+          _handleBackNavigation();
         } else {
           debugPrint('Pop occurred with result: $result');
         }
