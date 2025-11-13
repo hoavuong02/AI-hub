@@ -1,10 +1,15 @@
 import 'package:aihub/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'screens/ai_home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  bool hasPermission = await AwesomeNotifications().isNotificationAllowed();
+  if (!hasPermission) {
+    await AwesomeNotifications().requestPermissionToSendNotifications();
+  }
   runApp(const MyApp());
 }
 
