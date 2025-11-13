@@ -53,7 +53,11 @@ class AiControlScreenState extends State<AiControlScreen> {
     final isDefaultAiProtected = !_loadLastOpenedAi;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Control'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('AI Control'),
+        centerTitle: true,
+        elevation: 0,
+      ),
       body: _isLoading
           ? const Center(
               child: Column(
@@ -67,41 +71,6 @@ class AiControlScreenState extends State<AiControlScreen> {
             )
           : Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Enable or disable AI assistants. Disabled AIs will be hidden from the main list.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.7,
-                          ),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      if (isDefaultAiProtected)
-                        Text(
-                          'Default AI ($_defaultAiName) cannot be disabled',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        )
-                      else
-                        Text(
-                          '"Load last opened AI" is enabled - all AIs can be disabled',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                    ],
-                  ),
-                ),
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
@@ -118,78 +87,118 @@ class AiControlScreenState extends State<AiControlScreen> {
                           isDefaultAi && isDefaultAiProtected;
 
                       return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 3,
+                        margin: const EdgeInsets.only(bottom: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 4,
-                          ),
-                          title: Row(
-                            children: [
-                              Text(
-                                name,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: isDefaultAi && isDefaultAiProtected
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              if (isDefaultAi && isDefaultAiProtected)
-                                Container(
-                                  margin: const EdgeInsets.only(left: 8),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: isDefaultAi && isDefaultAiProtected
+                                ? Border.all(
                                     color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.1,
+                                      alpha: 0.3,
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'Default',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
+                                    width: 1.5,
+                                  )
+                                : null,
+                          ),
+                          child: SwitchListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(icon, color: color, size: 24),
                                     ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        name,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 18,
+                                              color:
+                                                  isDefaultAi &&
+                                                      isDefaultAiProtected
+                                                  ? theme.colorScheme.primary
+                                                  : theme.colorScheme.onSurface,
+                                            ),
+                                      ),
+                                    ),
+                                    if (isDefaultAi && isDefaultAiProtected)
+                                      Container(
+                                        margin: const EdgeInsets.only(left: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Default',
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 12,
+                                              ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  desc,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: 14,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.7),
+                                    height: 1.4,
                                   ),
                                 ),
-                            ],
-                          ),
-                          subtitle: isDefaultAi && isDefaultAiProtected
-                              ? const Text(
-                                  'Default AI cannot be disabled when "Load last opened AI" is OFF',
-                                )
-                              : Text(desc),
-
-                          secondary: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
+                                if (isDefaultAi && isDefaultAiProtected)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      'Default AI cannot be disabled when "Load last opened AI" is OFF',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary
+                                                .withValues(alpha: 0.8),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                            child: Icon(
-                              icon,
-                              color:
-                                  isDefaultAi &&
-                                      isDefaultAiProtected &&
-                                      !isEnabled
-                                  ? theme.colorScheme.primary
-                                  : color,
-                            ),
+                            value: isEnabled,
+                            onChanged: isSwitchDisabled
+                                ? null
+                                : (value) {
+                                    _updateAiStatus(name, value);
+                                  },
+                            activeThumbColor: theme.colorScheme.primary,
                           ),
-                          value: isEnabled,
-                          onChanged: isSwitchDisabled
-                              ? null
-                              : (value) {
-                                  _updateAiStatus(name, value);
-                                },
                         ),
                       );
                     },

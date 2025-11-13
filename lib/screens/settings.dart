@@ -165,10 +165,11 @@ class SettingsScreenState extends State<SettingsScreen> {
         );
       }
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isBackingUp = false;
         });
+      }
     }
   }
 
@@ -215,12 +216,14 @@ class SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (result == null || result.files.single.path == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No file selected'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No file selected'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
         setState(() {
           _isRestoring = false;
         });
@@ -234,10 +237,8 @@ class SettingsScreenState extends State<SettingsScreen> {
       final appSettings = data['app_settings'] as Map<String, dynamic>;
       final rawCookies = data['webview_cookies'] as Map<String, dynamic>?;
 
-      // Restore app settings
       await SharedPrefs.restoreSettings(appSettings);
 
-      // Restore cookies
       if (rawCookies != null && rawCookies.isNotEmpty) {
         final cookieManager = CookieManager.instance();
         for (var entry in rawCookies.entries) {
@@ -281,10 +282,11 @@ class SettingsScreenState extends State<SettingsScreen> {
         );
       }
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isRestoring = false;
         });
+      }
     }
   }
 
@@ -293,66 +295,112 @@ class SettingsScreenState extends State<SettingsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        centerTitle: true,
+        elevation: 0,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(
-            'AI Preferences',
-            style: theme.textTheme.titleMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
+          _buildSectionHeader('AI Preferences', Icons.smart_toy_rounded, theme),
           const SizedBox(height: 12),
 
           Card(
+            elevation: 3,
+            margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            elevation: 3,
             child: SwitchListTile(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
-                vertical: 4,
+                vertical: 12,
               ),
-              secondary: Icon(
-                Icons.history_rounded,
-                color: theme.colorScheme.primary,
+              title: Text(
+                'Load last opened AI',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
               ),
-              title: const Text('Load last opened AI'),
-              subtitle: const Text(
+              subtitle: Text(
                 'Automatically open the last used AI on startup',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontSize: 13,
+                ),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check_circle,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
               ),
               value: loadLastOpenedAi,
               onChanged: _updateLoadLastOpenedAi,
+              activeThumbColor: theme.colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 16),
 
           Card(
+            elevation: 3,
+            margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            elevation: 3,
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
-                vertical: 8,
+                vertical: 12,
               ),
-              leading: Icon(
-                Icons.smart_toy_rounded,
-                color: loadLastOpenedAi
-                    ? Colors.grey
-                    : theme.colorScheme.primary,
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: (loadLastOpenedAi || _enabledAiList.isEmpty)
+                      ? Colors.grey.withValues(alpha: 0.15)
+                      : theme.colorScheme.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.smart_toy_rounded,
+                  color: (loadLastOpenedAi || _enabledAiList.isEmpty)
+                      ? Colors.grey
+                      : theme.colorScheme.primary,
+                  size: 24,
+                ),
               ),
-              title: const Text('Select Default AI'),
+              title: Text(
+                'Select Default AI',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               subtitle: _enabledAiList.isEmpty
-                  ? const Text('No enabled AIs available')
+                  ? Text(
+                      'No enabled AIs available',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.orange,
+                        fontSize: 13,
+                      ),
+                    )
                   : Text(
                       loadLastOpenedAi
                           ? 'Disabled while "Load last opened AI" is ON'
                           : 'Choose which AI to load when app starts',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
+                        fontSize: 13,
+                      ),
                     ),
               trailing: IgnorePointer(
                 ignoring: loadLastOpenedAi || _enabledAiList.isEmpty,
@@ -371,7 +419,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                     items: _enabledAiList.map<DropdownMenuItem<String>>((ai) {
                       return DropdownMenuItem<String>(
                         value: ai['name'],
-                        child: Text(ai['name']),
+                        child: Text(
+                          ai['name'],
+                          style: const TextStyle(fontSize: 13),
+                        ),
                       );
                     }).toList(),
                     onChanged: (loadLastOpenedAi || _enabledAiList.isEmpty)
@@ -386,27 +437,56 @@ class SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
 
           Card(
+            elevation: 3,
+            margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            elevation: 3,
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
-                vertical: 8,
+                vertical: 12,
               ),
-              leading: Icon(
-                Icons.psychology_alt_rounded,
-                color: theme.colorScheme.primary,
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.psychology_alt_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
               ),
-              title: const Text('AI Control'),
-              subtitle: const Text(
+              title: Text(
+                'AI Control',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              subtitle: Text(
                 'Enable or disable AI features individually',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontSize: 13,
+                ),
               ),
-              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+              trailing: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 16,
+                ),
+              ),
               onTap: () {
                 Navigator.push(
                   context,
@@ -418,32 +498,46 @@ class SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
-          Text(
-            'WebView Settings',
-            style: theme.textTheme.titleMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
+          _buildSectionHeader('WebView Settings', Icons.web_rounded, theme),
           const SizedBox(height: 12),
 
           Card(
+            elevation: 3,
+            margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            elevation: 3,
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
-                vertical: 8,
+                vertical: 12,
               ),
-              leading: Icon(
-                Icons.text_fields_rounded,
-                color: theme.colorScheme.primary,
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.text_fields_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
               ),
-              title: const Text('WebView Font Size'),
-              subtitle: const Text('Adjust text size in AI WebView content'),
+              title: Text(
+                'WebView Font Size',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              subtitle: Text(
+                'Adjust text size in AI WebView content',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontSize: 13,
+                ),
+              ),
               trailing: DropdownButton<String>(
                 borderRadius: BorderRadius.circular(12),
                 value: _fontSize,
@@ -457,6 +551,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                             (word) => word[0].toUpperCase() + word.substring(1),
                           )
                           .join('-'),
+                      style: const TextStyle(fontSize: 13),
                     ),
                   );
                 }).toList(),
@@ -469,62 +564,122 @@ class SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
-          Text(
-            'Data Management',
-            style: theme.textTheme.titleMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
+          _buildSectionHeader('Data Management', Icons.backup_rounded, theme),
           const SizedBox(height: 12),
 
           Card(
+            elevation: 3,
+            margin: const EdgeInsets.only(bottom: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            elevation: 3,
             child: Column(
               children: [
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 8,
+                    vertical: 12,
                   ),
-                  leading: Icon(
-                    Icons.backup_rounded,
-                    color: theme.colorScheme.primary,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.backup_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
                   ),
-                  title: const Text('Backup Settings'),
-                  subtitle: const Text('Export your settings to a file'),
+                  title: Text(
+                    'Backup Settings',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Export your settings to a file',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontSize: 13,
+                    ),
+                  ),
                   trailing: _isBackingUp
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                      : Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 16,
+                          ),
+                        ),
                   onTap: _isBackingUp ? null : _backupSettings,
                 ),
-                const Divider(height: 1),
+                const Divider(height: 1, indent: 70),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 8,
+                    vertical: 12,
                   ),
-                  leading: Icon(
-                    Icons.restore_rounded,
-                    color: theme.colorScheme.primary,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.restore_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
                   ),
-                  title: const Text('Restore Settings'),
-                  subtitle: const Text('Import settings from a backup file'),
+                  title: Text(
+                    'Restore Settings',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Import settings from a backup file',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontSize: 13,
+                    ),
+                  ),
                   trailing: _isRestoring
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                      : Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 16,
+                          ),
+                        ),
                   onTap: _isRestoring ? null : _restoreSettings,
                 ),
               ],
@@ -532,6 +687,30 @@ class SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, ThemeData theme) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: theme.colorScheme.primary, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+            fontSize: 18,
+          ),
+        ),
+      ],
     );
   }
 }
