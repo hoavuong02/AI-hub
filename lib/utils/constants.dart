@@ -99,3 +99,44 @@ final Map<String, int> fontSizes = {
 
 final userAgent =
     "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36";
+
+final String shareOverrideJS = """
+(function() {
+  // Store original share function if it exists
+  const originalShare = navigator.share;
+  
+  // Override navigator.share
+  navigator.share = function(shareData) {
+    console.log('Share intercepted:', shareData);
+    
+    // Send share data to Flutter
+    if (window.flutter_inappwebview) {
+      window.flutter_inappwebview.callHandler('shareHandler', shareData);
+    }
+    
+    // Return a promise that resolves (simulating successful share)
+    return Promise.resolve();
+  };
+  
+  // Also handle click events on share buttons (as fallback)
+  document.addEventListener('click', function(e) {
+    const target = e.target;
+    const isShareButton = target.closest('[class*="share"], [id*="share"]') ||
+                          target.closest('button[onclick*="share"]');
+    
+    if (isShareButton) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Try to extract share data from common patterns
+      const title = document.title;
+      const url = window.location.href;
+      const shareData = { title: title, url: url, text: title };
+      
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('shareHandler', shareData);
+      }
+    }
+  }, true);
+})();
+""";
