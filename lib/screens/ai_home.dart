@@ -1,6 +1,8 @@
 import 'package:aihub/screens/settings.dart';
+import 'package:aihub/utils/common.dart';
 import 'package:aihub/utils/download_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:share_plus/share_plus.dart';
@@ -97,7 +99,7 @@ class _AiHomeState extends State<AiHome> {
           children: [
             Icon(
               Icons.psychology_rounded,
-              size: 64,
+              size: 40,
               color: Theme.of(
                 context,
               ).colorScheme.onSurface.withValues(alpha: 0.3),
@@ -223,16 +225,12 @@ class _AiHomeState extends State<AiHome> {
 
   String? _sameSiteToString(HTTPCookieSameSitePolicy? policy) {
     if (policy == null) return null;
-    switch (policy) {
-      case HTTPCookieSameSitePolicy.LAX:
-        return 'LAX';
-      case HTTPCookieSameSitePolicy.STRICT:
-        return 'STRICT';
-      case HTTPCookieSameSitePolicy.NONE:
-        return 'NONE';
-      default:
-        return null;
-    }
+    return switch (policy) {
+      HTTPCookieSameSitePolicy.LAX => 'LAX',
+      HTTPCookieSameSitePolicy.STRICT => 'STRICT',
+      HTTPCookieSameSitePolicy.NONE => 'NONE',
+      _ => null,
+    };
   }
 
   HTTPCookieSameSitePolicy? _stringToSameSite(String? str) {
@@ -266,6 +264,8 @@ class _AiHomeState extends State<AiHome> {
         disableHorizontalScroll: false,
         supportZoom: false,
         userAgent: userAgent,
+        disableContextMenu: true,
+        disableLongPressContextMenuOnLinks: true,
       ),
       onWebViewCreated: (controller) async {
         controller.addJavaScriptHandler(
@@ -393,22 +393,74 @@ class _AiHomeState extends State<AiHome> {
       },
       onDownloadStartRequest: (controller, downloadStartRequest) async {
         final url = downloadStartRequest.url.toString();
+        bool showNotification = true;
         final fileName =
-            downloadStartRequest.suggestedFilename ?? 'download.file';
+            downloadStartRequest.suggestedFilename ?? url.split('/').last;
 
         bool hasPermission = await AwesomeNotifications()
             .isNotificationAllowed();
         if (mounted) {
           if (!hasPermission) {
-            await _downloadManager.downloadFile(
-              context,
-              url,
-              fileName,
-              showNotification: false,
-            );
-          } else {
-            await _downloadManager.downloadFile(context, url, fileName);
+            showNotification = false;
           }
+          await _downloadManager.downloadFile(
+            context,
+            url,
+            fileName,
+            showNotification: showNotification,
+          );
+        }
+      },
+      onLongPressHitTestResult: (controller, hitTestResult) async {
+        if (hitTestResult.type ==
+            InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE) {
+          final linkUrl = hitTestResult.extra;
+
+          showModalBottomSheet(
+            context: context,
+            builder: (context) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(Icons.open_in_new),
+                  title: Text("Open Link"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (linkUrl == null) return;
+                    launchLink(Uri.parse(linkUrl), context, Theme.of(context));
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.copy),
+                  title: Text("Copy Link"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Clipboard.setData(ClipboardData(text: linkUrl!));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text("Link copied")));
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.share),
+                  title: Text("Share Link"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    SharePlus.instance.share(
+                      ShareParams(text: linkUrl, title: "Share Link"),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.close),
+                  title: Text("Close"),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          );
         }
       },
     );
@@ -562,94 +614,142 @@ class _AiHomeState extends State<AiHome> {
       },
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: 60,
+          toolbarHeight: 65,
           backgroundColor: isDark
               ? theme.colorScheme.surface
               : theme.colorScheme.primaryContainer,
           foregroundColor: theme.colorScheme.onPrimaryContainer,
-          elevation: 2,
-          shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.1),
+          elevation: 0,
+          scrolledUnderElevation: 3,
+          surfaceTintColor: Colors.transparent,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
           ),
           title: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   Icons.psychology_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 20,
+                  color: theme.colorScheme.onPrimary,
+                  size: 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       name,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onPrimaryContainer.withValues(
+                          alpha: 0.8,
                         ),
+                        letterSpacing: 0.5,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       _currentDomain,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onPrimaryContainer,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(width: 12),
+
               if (_selectedIndex < _isLoadingList.length &&
                   _isLoadingList[_selectedIndex])
-                Container(
-                  padding: const EdgeInsets.all(6),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary.withValues(alpha: 0.15),
+                        theme.colorScheme.primary.withValues(alpha: 0.1),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-                        width: 12,
-                        height: 12,
+                        width: 14,
+                        height: 14,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: theme.colorScheme.primary,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      const Text(
+                      const SizedBox(width: 8),
+                      Text(
                         'Loading',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
+
               if (_selectedIndex < _errorMessages.length &&
                   _errorMessages[_selectedIndex] != null &&
                   !_isLoadingList[_selectedIndex])
-                Container(
-                  padding: const EdgeInsets.all(6),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.error.withValues(alpha: 0.1),
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.error.withValues(alpha: 0.15),
+                        theme.colorScheme.error.withValues(alpha: 0.1),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.error.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -657,15 +757,14 @@ class _AiHomeState extends State<AiHome> {
                       Icon(
                         Icons.error_outline_rounded,
                         color: theme.colorScheme.error,
-                        size: 12,
+                        size: 14,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       Text(
                         'Error',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -673,99 +772,171 @@ class _AiHomeState extends State<AiHome> {
                 ),
             ],
           ),
+
           leading: Builder(
-            builder: (context) => Container(
-              margin: const EdgeInsets.all(8),
-              child: FloatingActionButton.small(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                elevation: 1,
-                child: const Icon(Icons.menu_rounded),
+            builder: (context) => IconButton(
+              onPressed: () => Scaffold.of(context).openDrawer(),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.rectangle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.menu_rounded,
+                  color: theme.colorScheme.onPrimary,
+                  size: 30,
+                ),
+              ),
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(
+                  side: BorderSide(color: Colors.transparent),
+                ),
+                padding: EdgeInsets.zero,
               ),
             ),
           ),
+
           actions: [
-            IconButton(
-              onPressed: () {
-                showMenu(
-                  context: context,
-                  position: RelativeRect.fromLTRB(
-                    MediaQuery.of(context).size.width,
-                    kToolbarHeight,
-                    0,
-                    0,
-                  ),
-                  items: [
-                    if (_selectedIndex < _hasBeenLoadedList.length &&
-                        _hasBeenLoadedList[_selectedIndex] &&
-                        !_isLoadingList[_selectedIndex])
-                      const PopupMenuItem(
-                        value: 'reload',
-                        child: Row(
-                          children: [
-                            Icon(Icons.refresh),
-                            SizedBox(width: 10),
-                            Text(
-                              'Reload',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (_selectedIndex < _canGoBackList.length &&
-                        _canGoBackList[_selectedIndex] &&
-                        _hasBeenLoadedList[_selectedIndex])
-                      const PopupMenuItem(
-                        value: 'back',
-                        child: Row(
-                          children: [
-                            Icon(Icons.arrow_back_ios),
-                            SizedBox(width: 10),
-                            Text(
-                              'Go back',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const PopupMenuItem(
-                      value: 'settings',
-                      child: Row(
-                        children: [
-                          Icon(Icons.settings),
-                          SizedBox(width: 10),
-                          Text('Settings'),
-                        ],
-                      ),
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              child: IconButton.filledTonal(
+                onPressed: () {
+                  showMenu(
+                    context: context,
+                    position: RelativeRect.fromLTRB(
+                      MediaQuery.of(context).size.width - 50,
+                      kToolbarHeight + 20,
+                      0,
+                      0,
                     ),
-                  ],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ).then((value) async {
-                  if (value == 'reload') {
-                    _reloadPage(_selectedIndex);
-                  } else if (value == 'back') {
-                    await _controllers[_selectedIndex]?.goBack();
-                  } else if (value == 'settings') {
-                    if (!context.mounted) return;
-                    Navigator.of(context)
-                        .push(
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
+                    items: [
+                      if (_selectedIndex < _hasBeenLoadedList.length &&
+                          _hasBeenLoadedList[_selectedIndex] &&
+                          !_isLoadingList[_selectedIndex])
+                        PopupMenuItem(
+                          value: 'reload',
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.refresh_rounded,
+                                  color: theme.colorScheme.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Reload',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                        )
-                        .then((_) => _handleSettingsReturn());
-                  }
-                });
-              },
-              icon: const Icon(Icons.more_vert_rounded),
-              tooltip: "More options",
+                        ),
+                      if (_selectedIndex < _canGoBackList.length &&
+                          _canGoBackList[_selectedIndex] &&
+                          _hasBeenLoadedList[_selectedIndex])
+                        PopupMenuItem(
+                          value: 'back',
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.secondary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.arrow_back_rounded,
+                                  color: theme.colorScheme.secondary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Go Back',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      PopupMenuItem(
+                        value: 'settings',
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.settings_rounded,
+                                color: theme.colorScheme.tertiary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Settings',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 8,
+                  ).then((value) async {
+                    if (value == 'reload') {
+                      _reloadPage(_selectedIndex);
+                    } else if (value == 'back') {
+                      await _controllers[_selectedIndex]?.goBack();
+                    } else if (value == 'settings') {
+                      if (!context.mounted) return;
+                      Navigator.of(context)
+                          .push(
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          )
+                          .then((_) => _handleSettingsReturn());
+                    }
+                  });
+                },
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: "More options",
+              ),
             ),
           ],
         ),
-
         body: SafeArea(
           child: Stack(
             children: [
