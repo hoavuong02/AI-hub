@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:aihub/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -14,6 +15,21 @@ class DownloadManager {
     String fileName, {
     bool showNotification = true,
   }) async {
+    if (url.contains("blob:")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Cannot download file with blob URL'),
+          duration: Duration(seconds: 3),
+          backgroundColor: Colors.red.shade500,
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+      return;
+    }
     final int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
     _showEnhancedSnackBar(fileName, context);
@@ -47,6 +63,10 @@ class DownloadManager {
 
       final client = http.Client();
       final request = http.Request('GET', Uri.parse(url));
+      request.headers.putIfAbsent("User-Agent", () => userAgent);
+      request.headers.putIfAbsent("Accept", () => "*/*");
+      request.headers.putIfAbsent("Connection", () => "keep-alive");
+
       final response = await client.send(request);
 
       final totalBytes = response.contentLength ?? 0;
