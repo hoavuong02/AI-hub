@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # -------------------------
       # VERSION STEPS FIRST
@@ -21,8 +23,9 @@ jobs:
       - name: Read version from pubspec.yaml
         id: version
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          RAW=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          CLEAN_VERSION=$(echo "$RAW" | cut -d'+' -f1)
+          echo "version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
         id: tag_check
@@ -74,12 +77,18 @@ jobs:
         with:
           flutter-version: '3.24.0'
 
+      - name: Flutter doctor
+        run: flutter doctor -v
+
       - name: Restore Flutter packages
         run: flutter pub get
 
-
       - name: Create keystore file
         run: |
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "ERROR: KEYSTORE_BASE64 secret is not set"
+            exit 1
+          fi
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/release-keystore.jks
 
       # ---- Build Fat + Split APKs ----
@@ -104,47 +113,48 @@ jobs:
           FIX=$(git log --pretty=format:"%s" $RANGE | grep -i '^fix' | sed -E 's/^[Ff][Ii][Xx]:?[ ]*//' || true)
           REFACTOR=$(git log --pretty=format:"%s" $RANGE | grep -i '^refactor' | sed -E 's/^[Rr][Ee][Ff][Aa][Cc][Tt][Oo][Rr]:?[ ]*//' || true)
 
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-
-          echo "Changes:" >> $GITHUB_OUTPUT
+          NOTES_FILE=$(mktemp)
+          echo "Changes:" >> $NOTES_FILE
           if [ -n "$FEAT" ]; then
-            echo "$FEAT" | sed 's/^/- /' >> $GITHUB_OUTPUT
+            echo "$FEAT" | sed 's/^/- /' >> $NOTES_FILE
           else
-            echo "- None" >> $GITHUB_OUTPUT
+            echo "- None" >> $NOTES_FILE
           fi
 
-          echo "" >> $GITHUB_OUTPUT
-          echo "Bug fixes:" >> $GITHUB_OUTPUT
+          echo "" >> $NOTES_FILE
+          echo "Bug fixes:" >> $NOTES_FILE
           if [ -n "$FIX" ]; then
-            echo "$FIX" | sed 's/^/- /' >> $GITHUB_OUTPUT
+            echo "$FIX" | sed 's/^/- /' >> $NOTES_FILE
           else
-            echo "- None" >> $GITHUB_OUTPUT
+            echo "- None" >> $NOTES_FILE
           fi
 
-          echo "" >> $GITHUB_OUTPUT
-          echo "Refactor:" >> $GITHUB_OUTPUT
+          echo "" >> $NOTES_FILE
+          echo "Refactor:" >> $NOTES_FILE
           if [ -n "$REFACTOR" ]; then
-            echo "$REFACTOR" | sed 's/^/- /' >> $GITHUB_OUTPUT
+            echo "$REFACTOR" | sed 's/^/- /' >> $NOTES_FILE
           else
-            echo "- None" >> $GITHUB_OUTPUT
+            echo "- None" >> $NOTES_FILE
           fi
 
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Use delimiter that won't conflict with the content
+          EOF_MARKER=$(openssl rand -hex 16)
+          echo "notes<<$EOF_MARKER" >> $GITHUB_OUTPUT
+          cat $NOTES_FILE >> $GITHUB_OUTPUT
+          echo "$EOF_MARKER" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release with APKs
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.version.outputs.version }}+${{ steps.buildnumber.outputs.number }}
-          name: v${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}-${{ steps.buildnumber.outputs.number }}
+          name: Release v${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.notes }}
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # ---- Upload All APKs ----
-      - name: Upload APKs
-        run: |
-          gh release upload "v${{ steps.version.outputs.version }}+${{ steps.buildnumber.outputs.number }}" \
-            build/app/outputs/flutter-apk/app-release.apk \
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-            build/app/outputs/flutter-apk/app-x86_64-release.apk
