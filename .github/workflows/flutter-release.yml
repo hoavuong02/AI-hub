@@ -1,100 +1,147 @@
-name: Release Flutter APK
+name: Build and Release Flutter App
 
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+      # -------------------------
+      # VERSION STEPS FIRST
+      # -------------------------
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.4'
-          cache: true
-
-      - name: Create Keystore from Secrets
-        run: |
-          echo "${{ secrets.KEYSTORE }}" | base64 -d > android/app/upload-keystore.jks
-
-      - name: Get Current Version and Increment Build
+      - name: Read version from pubspec.yaml
         id: version
         run: |
-          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}')
-          VERSION_PART=$(echo $CURRENT_VERSION | cut -d'+' -f1)
-          CURRENT_BUILD=$(echo $CURRENT_VERSION | cut -d'+' -f2)
-          NEW_BUILD=$((CURRENT_BUILD + 1))
-          NEW_VERSION="$VERSION_PART+$NEW_BUILD"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "tag=v$VERSION_PART" >> $GITHUB_OUTPUT
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Update Version in pubspec.yaml
-        run: |
-          sed -i "s/^version: .*/version: ${{ steps.version.outputs.new_version }}/" pubspec.yaml
-          echo "Updated to: ${{ steps.version.outputs.new_version }}"
-
-      - name: Configure Git
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-
-      - name: Commit Version Bump
-        run: |
-          git add pubspec.yaml
-          git commit -m "ci: release ${{ steps.version.outputs.new_version }}"
-          git push
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Build Release APK
-        run: flutter build apk --release
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Build Split APKs
-        run: flutter build apk --release --split-per-abi
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      
       - name: Check if tag exists
-        id: check_tag
+        id: tag_check
         run: |
-          git fetch --tags
-          if git rev-parse ${{ steps.version.outputs.tag }} >/dev/null 2>&1; then
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+      - name: Stop if tag already exists
+        if: steps.tag_check.outputs.exists == 'true'
+        run: |
+          echo "Tag v${{ steps.version.outputs.version }} already exists. Stopping workflow."
+          exit 1
+
+      - name: Generate build number (timestamp)
+        id: buildnumber
+        run: |
+          BUILD_NUMBER=$(date +%s)
+          echo "number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Update version in pubspec.yaml
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BUILD="${{ steps.buildnumber.outputs.number }}"
+          sed -i "s/^version: .*/version: $VERSION+$BUILD/" pubspec.yaml
+
+      - name: Commit version update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git commit -m "chore: update build number to ${{ steps.buildnumber.outputs.number }}"
+          git push
+
+      # -------------------------
+      # NORMAL WORKFLOW CONTINUES
+      # -------------------------
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
-          files: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+
+      - name: Restore Flutter packages
+        run: flutter pub get
+
+
+      - name: Create keystore file
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/release-keystore.jks
+
+      # ---- Build Fat + Split APKs ----
+      - name: Build Fat APK
+        run: flutter build apk --release
+
+      - name: Build Split APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Generate Release Notes
+        id: notes
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            RANGE=""
+          else
+            RANGE="$LAST_TAG..HEAD"
+          fi
+
+          FEAT=$(git log --pretty=format:"%s" $RANGE | grep -i '^feat' | sed -E 's/^[Ff][Ee][Aa][Tt]:?[ ]*//' || true)
+          FIX=$(git log --pretty=format:"%s" $RANGE | grep -i '^fix' | sed -E 's/^[Ff][Ii][Xx]:?[ ]*//' || true)
+          REFACTOR=$(git log --pretty=format:"%s" $RANGE | grep -i '^refactor' | sed -E 's/^[Rr][Ee][Ff][Aa][Cc][Tt][Oo][Rr]:?[ ]*//' || true)
+
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+
+          echo "Changes:" >> $GITHUB_OUTPUT
+          if [ -n "$FEAT" ]; then
+            echo "$FEAT" | sed 's/^/- /' >> $GITHUB_OUTPUT
+          else
+            echo "- None" >> $GITHUB_OUTPUT
+          fi
+
+          echo "" >> $GITHUB_OUTPUT
+          echo "Bug fixes:" >> $GITHUB_OUTPUT
+          if [ -n "$FIX" ]; then
+            echo "$FIX" | sed 's/^/- /' >> $GITHUB_OUTPUT
+          else
+            echo "- None" >> $GITHUB_OUTPUT
+          fi
+
+          echo "" >> $GITHUB_OUTPUT
+          echo "Refactor:" >> $GITHUB_OUTPUT
+          if [ -n "$REFACTOR" ]; then
+            echo "$REFACTOR" | sed 's/^/- /' >> $GITHUB_OUTPUT
+          else
+            echo "- None" >> $GITHUB_OUTPUT
+          fi
+
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}+${{ steps.buildnumber.outputs.number }}
+          name: v${{ steps.version.outputs.version }}
+          body: ${{ steps.notes.outputs.notes }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- Upload All APKs ----
+      - name: Upload APKs
+        run: |
+          gh release upload "v${{ steps.version.outputs.version }}+${{ steps.buildnumber.outputs.number }}" \
+            build/app/outputs/flutter-apk/app-release.apk \
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
             build/app/outputs/flutter-apk/app-x86_64-release.apk
