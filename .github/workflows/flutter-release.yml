@@ -66,6 +66,15 @@ jobs:
       # NORMAL WORKFLOW CONTINUES
       # -------------------------
 
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            /opt/hostedtoolcache/flutter
+            .pub-cache
+            build
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.lock') }}
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
@@ -89,22 +98,23 @@ jobs:
             echo "ERROR: KEYSTORE secret is not set"
             exit 1
           fi
-          echo "${{ secrets.KEYSTORE }}" | base64 --decode > android/release-keystore.jks
+          echo "${{ secrets.KEYSTORE }}" | base64 --decode > android/app/release-keystore.jks
+          echo "Keystore created at: $(pwd)/android/app/release-keystore.jks"
+          ls -la android/app/release-keystore.jks
 
       # ---- Build Fat + Split APKs ----
-      - name: Build Fat APK
-        run: flutter build apk --release
+      - name: Build APKs
+        run: |
+          flutter build apk --release
+          flutter build apk --release --split-per-abi
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        continue-on-error: false
 
-      - name: Build Split APKs
-        run: flutter build apk --release --split-per-abi
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Clean up keystore
+        run: rm -f android/app/release-keystore.jks
 
       - name: Generate Release Notes
         id: notes
@@ -154,7 +164,8 @@ jobs:
       - name: Create GitHub Release with APKs
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.version.outputs.version }}-${{ steps.buildnumber.outputs.number }}
+          # FIX: Use semantic versioning with build metadata instead of hyphen
+          tag_name: v${{ steps.version.outputs.version }}+${{ steps.buildnumber.outputs.number }}
           name: Release v${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.notes }}
           files: |
