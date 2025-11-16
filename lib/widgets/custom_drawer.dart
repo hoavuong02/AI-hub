@@ -1,5 +1,5 @@
+import 'package:aihub/utils/common.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../utils/constants.dart';
 
 class CustomDrawer extends StatelessWidget {
@@ -23,15 +23,16 @@ class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     return Drawer(
-      width: MediaQuery.of(context).size.width * 0.8,
+      width: MediaQuery.of(context).size.width * 0.85,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.horizontal(right: Radius.circular(24)),
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(32)),
       ),
-      elevation: 16,
-      shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.3),
+      elevation: 24,
+      shadowColor: colorScheme.shadow.withValues(alpha: 0.4),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -39,61 +40,127 @@ class CustomDrawer extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: isDark
                 ? [
-                    theme.colorScheme.surface,
-                    theme.colorScheme.surface.withValues(alpha: 0.9),
+                    colorScheme.surface,
+                    colorScheme.surface.withValues(alpha: 0.95),
+                    colorScheme.surface.withValues(alpha: 0.9),
                   ]
                 : [
-                    theme.colorScheme.primaryContainer,
-                    theme.colorScheme.primaryContainer.withValues(alpha: 0.9),
+                    colorScheme.primaryContainer,
+                    colorScheme.primaryContainer.withValues(alpha: 0.8),
+                    colorScheme.surface,
                   ],
+            stops: const [0.0, 0.5, 1.0],
           ),
         ),
         child: Column(
           children: [
             Container(
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 20,
+                top: MediaQuery.of(context).padding.top + 24,
                 left: 24,
                 right: 24,
-                bottom: 20,
+                bottom: 24,
               ),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.primary.withValues(alpha: 0.15),
+                    colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  ],
+                ),
                 borderRadius: const BorderRadius.only(
-                  bottomRight: Radius.circular(24),
+                  bottomRight: Radius.circular(32),
                 ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.psychology_rounded,
-                      color: theme.colorScheme.onPrimary,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onPrimaryContainer,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              colorScheme.primary,
+                              colorScheme.primary.withValues(alpha: 0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.primary.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
+                        child: Icon(
+                          Icons.psychology_rounded,
+                          color: colorScheme.onPrimary,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: colorScheme.onPrimaryContainer,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Your AI Assistant Collection',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onPrimaryContainer
+                                    .withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.auto_awesome_rounded,
+                          color: colorScheme.primary,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          'Your AI Assistant Collection',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer
-                                .withValues(alpha: 0.8),
+                          '${enabledAiList.length} AI Assistant${enabledAiList.length != 1 ? 's' : ''} Ready',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -102,255 +169,90 @@ class CustomDrawer extends StatelessWidget {
                 ],
               ),
             ),
+
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
+                  color: colorScheme.surface,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
+                    topLeft: Radius.circular(32),
                   ),
                 ),
                 child: Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                        horizontal: 24,
+                        vertical: 12,
                       ),
                       child: Row(
                         children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.smart_toy_rounded,
+                              color: colorScheme.primary,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           Text(
                             'AI Assistants',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                           const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
                               '${enabledAiList.length}/${aiList.length}',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
+
                     if (enabledAiList.isEmpty)
                       Expanded(
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.psychology_alt_outlined,
-                                size: 48,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'No AI Assistants Enabled',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Enable AIs in Settings',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        child: _buildEmptyState(context, theme, colorScheme),
                       )
                     else
                       Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          children: [
-                            ...enabledAiList.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final ai = entry.value;
-                              final isSelected = index == selectedIndex;
-                              final hasError =
-                                  index < errorMessages.length &&
-                                  errorMessages[index] != null;
-                              final isLoading =
-                                  index < isLoadingList.length &&
-                                  isLoadingList[index];
-                              final hasBeenLoaded =
-                                  index < hasBeenLoadedList.length &&
-                                  hasBeenLoadedList[index];
-
-                              return Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  color: isSelected
-                                      ? ai['color'].withValues(alpha: 0.1)
-                                      : theme.colorScheme.surface,
-                                  border: isSelected
-                                      ? Border.all(
-                                          color: ai['color'].withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          width: 1.5,
-                                        )
-                                      : null,
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: ai['color'].withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ]
-                                      : [
-                                          BoxShadow(
-                                            color: theme.colorScheme.shadow
-                                                .withValues(alpha: 0.05),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ],
-                                ),
-                                child: ListTile(
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? ai['color']
-                                          : ai['color'].withValues(alpha: 0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Icon(
-                                          ai['icon'],
-                                          color: isSelected
-                                              ? Colors.white
-                                              : ai['color'],
-                                          size: 20,
-                                        ),
-                                        if (hasError)
-                                          Positioned(
-                                            right: 0,
-                                            top: 0,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                color: theme.colorScheme.error,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.error_outline_rounded,
-                                                color: Colors.white,
-                                                size: 8,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  title: Text(
-                                    ai['name'],
-                                    style: TextStyle(
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                      color: isSelected
-                                          ? ai['color']
-                                          : theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  trailing: isSelected
-                                      ? Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: ai['color'],
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.check,
-                                            color: Colors.white,
-                                            size: 12,
-                                          ),
-                                        )
-                                      : hasError
-                                      ? Icon(
-                                          Icons.error_outline_rounded,
-                                          size: 16,
-                                          color: theme.colorScheme.error,
-                                        )
-                                      : isLoading
-                                      ? SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: ai['color'],
-                                          ),
-                                        )
-                                      : hasBeenLoaded
-                                      ? Icon(
-                                          Icons.check_circle_outline_rounded,
-                                          size: 16,
-                                          color: Colors.green,
-                                        )
-                                      : null,
-                                  selected: isSelected,
-                                  onTap: () {
-                                    onItemTapped(index);
-                                    Navigator.pop(context);
-                                  },
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
+                        child: _buildAIList(context, theme, colorScheme),
                       ),
                   ],
                 ),
               ),
             ),
+
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
+                  topLeft: Radius.circular(32),
+                ),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.1),
+                  width: 1,
                 ),
               ),
               child: Row(
@@ -360,57 +262,68 @@ class CustomDrawer extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${enabledAiList.length} of ${aiList.length} enabled',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                        'AI Ecosystem',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (enabledAiList.length < aiList.length)
-                        Text(
-                          '${aiList.length - enabledAiList.length} disabled',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.6),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${enabledAiList.length} active • ${aiList.length - enabledAiList.length} disabled',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
                           ),
                         ),
+                      ),
                     ],
                   ),
-                  GestureDetector(
-                    onTap: () async {
-                      final url = Uri.parse(
-                        'https://www.github.com/SilentCoderHere/',
-                      );
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      } else {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Could not launch link'),
-                            duration: Duration(seconds: 2),
-                            backgroundColor: theme.colorScheme.error,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () async {
+                        launchLink(
+                          Uri.parse('https://www.github.com/SilentCoderHere/'),
+                          context,
+                          theme,
                         );
-                      }
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'By Silent Coder',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              colorScheme.primary.withValues(alpha: 0.1),
+                              colorScheme.primary.withValues(alpha: 0.2),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.code_rounded,
+                              color: colorScheme.primary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Silent Coder',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -422,5 +335,363 @@ class CustomDrawer extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.psychology_alt_outlined,
+                size: 48,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No AI Assistants',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enable your favorite AI assistants\nin the settings to get started',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.tonal(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+                foregroundColor: colorScheme.primary,
+              ),
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAIList(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        ...enabledAiList.asMap().entries.map((entry) {
+          final index = entry.key;
+          final ai = entry.value;
+          final isSelected = index == selectedIndex;
+          final hasError =
+              index < errorMessages.length && errorMessages[index] != null;
+          final isLoading =
+              index < isLoadingList.length && isLoadingList[index];
+          final hasBeenLoaded =
+              index < hasBeenLoadedList.length && hasBeenLoadedList[index];
+
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            child: _buildAIListItem(
+              context: context,
+              theme: theme,
+              colorScheme: colorScheme,
+              ai: ai,
+              index: index,
+              isSelected: isSelected,
+              hasError: hasError,
+              isLoading: isLoading,
+              hasBeenLoaded: hasBeenLoaded,
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildAIListItem({
+    required BuildContext context,
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+    required Map<String, dynamic> ai,
+    required int index,
+    required bool isSelected,
+    required bool hasError,
+    required bool isLoading,
+    required bool hasBeenLoaded,
+  }) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    ai['color'].withValues(alpha: 0.15),
+                    ai['color'].withValues(alpha: 0.08),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : colorScheme.surface,
+          border: isSelected
+              ? Border.all(color: ai['color'].withValues(alpha: 0.3), width: 2)
+              : Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: ai['color'].withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 1,
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              onItemTapped(index);
+              Navigator.pop(context);
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              ai['color'],
+                              _adjustColorBrightness(ai['color'], 1.2),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: ai['color'].withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(ai['icon'], color: Colors.white, size: 22),
+                      ),
+                      if (hasError)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: colorScheme.error,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: colorScheme.surface,
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.error_rounded,
+                              color: Colors.white,
+                              size: 10,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          ai['name'],
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? ai['color']
+                                : colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        _buildStatusIndicator(
+                          theme: theme,
+                          colorScheme: colorScheme,
+                          aiColor: ai['color'],
+                          hasError: hasError,
+                          isLoading: isLoading,
+                          hasBeenLoaded: hasBeenLoaded,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  _buildTrailingIcon(
+                    theme: theme,
+                    colorScheme: colorScheme,
+                    aiColor: ai['color'],
+                    isSelected: isSelected,
+                    hasError: hasError,
+                    isLoading: isLoading,
+                    hasBeenLoaded: hasBeenLoaded,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusIndicator({
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+    required Color aiColor,
+    required bool hasError,
+    required bool isLoading,
+    required bool hasBeenLoaded,
+  }) {
+    String statusText = 'Ready';
+    Color statusColor = Colors.green;
+    IconData statusIcon = Icons.check_circle_rounded;
+
+    if (hasError) {
+      statusText = 'Error';
+      statusColor = colorScheme.error;
+      statusIcon = Icons.error_rounded;
+    } else if (isLoading) {
+      statusText = 'Loading...';
+      statusColor = aiColor;
+      statusIcon = Icons.autorenew_rounded;
+    } else if (!hasBeenLoaded) {
+      statusText = 'Not loaded';
+      statusColor = colorScheme.onSurfaceVariant;
+      statusIcon = Icons.circle_outlined;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(statusIcon, color: statusColor, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            statusText,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: statusColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrailingIcon({
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+    required Color aiColor,
+    required bool isSelected,
+    required bool hasError,
+    required bool isLoading,
+    required bool hasBeenLoaded,
+  }) {
+    if (isLoading) {
+      return SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2, color: aiColor),
+      );
+    }
+
+    if (hasError) {
+      return Icon(
+        Icons.warning_amber_rounded,
+        color: colorScheme.error,
+        size: 20,
+      );
+    }
+
+    if (isSelected) {
+      return Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [aiColor, _adjustColorBrightness(aiColor, 1.2)],
+          ),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.check_rounded, color: Colors.white, size: 16),
+      );
+    }
+
+    if (hasBeenLoaded) {
+      return Icon(Icons.check_circle_rounded, color: Colors.green, size: 20);
+    }
+
+    return Icon(
+      Icons.arrow_forward_ios_rounded,
+      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+      size: 16,
+    );
+  }
+
+  Color _adjustColorBrightness(Color color, double factor) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl.withLightness(hsl.lightness * factor).toColor();
   }
 }
