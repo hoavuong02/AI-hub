@@ -219,12 +219,12 @@ class SettingsScreenState extends State<SettingsScreen> {
             'Restore Backup',
             style: Theme.of(
               context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           content: Text(
             'This will replace all your current settings and logins. Are you sure you want to continue?',
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           actions: [
@@ -396,7 +396,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: theme.textTheme.headlineSmall?.copyWith(
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurface,
           ),
@@ -424,7 +424,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                 title: Text(
                   'Load last opened AI',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -484,7 +484,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                   ),
                   title: Text(
                     'Default AI',
-                    style: theme.textTheme.titleLarge?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -515,7 +515,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                         value: ai['name'],
                         child: Text(
                           ai['name'],
-                          style: theme.textTheme.bodyLarge,
+                          style: theme.textTheme.bodyMedium,
                         ),
                       );
                     }).toList(),
@@ -562,7 +562,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 ),
                 title: Text(
                   'AI Control',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -622,7 +622,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 ),
                 title: Text(
                   'WebView Font Size',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -647,7 +647,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                   word[0].toUpperCase() + word.substring(1),
                             )
                             .join('-'),
-                        style: theme.textTheme.bodyLarge,
+                        style: theme.textTheme.bodyMedium,
                       ),
                     );
                   }).toList(),
@@ -757,7 +757,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(width: 12),
         Text(
           title,
-          style: theme.textTheme.headlineSmall?.copyWith(
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurface,
           ),
@@ -831,7 +831,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Text(
                           title,
-                          style: theme.textTheme.titleLarge?.copyWith(
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: theme.colorScheme.onSurface,
                           ),

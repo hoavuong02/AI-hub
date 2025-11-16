@@ -161,7 +161,7 @@ class AiControlScreenState extends State<AiControlScreen>
                     children: [
                       Text(
                         ai['name'],
-                        style: theme.textTheme.headlineSmall?.copyWith(
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -195,7 +195,7 @@ class AiControlScreenState extends State<AiControlScreen>
             const SizedBox(height: 24),
             Text(
               ai['desc'],
-              style: theme.textTheme.bodyLarge?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
                 height: 1.6,
               ),
@@ -251,7 +251,7 @@ class AiControlScreenState extends State<AiControlScreen>
           duration: const Duration(milliseconds: 300),
           child: Text(
             'AI Control Center',
-            style: theme.textTheme.headlineSmall?.copyWith(
+            style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
             ),
@@ -316,7 +316,7 @@ class AiControlScreenState extends State<AiControlScreen>
           const SizedBox(height: 24),
           Text(
             'Loading AI Ecosystem',
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
             ),
@@ -442,7 +442,7 @@ class AiControlScreenState extends State<AiControlScreen>
               ),
               child: Text(
                 '${(enabledCount / aiList.length * 100).round()}%',
-                style: theme.textTheme.titleSmall?.copyWith(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
@@ -529,7 +529,7 @@ class AiControlScreenState extends State<AiControlScreen>
                                     Expanded(
                                       child: Text(
                                         ai['name'],
-                                        style: theme.textTheme.titleLarge
+                                        style: theme.textTheme.titleMedium
                                             ?.copyWith(
                                               fontWeight: FontWeight.w700,
                                               color:
@@ -537,7 +537,6 @@ class AiControlScreenState extends State<AiControlScreen>
                                                       isDefaultAiProtected
                                                   ? colorScheme.primary
                                                   : colorScheme.onSurface,
-                                              fontSize: 20,
                                             ),
                                       ),
                                     ),

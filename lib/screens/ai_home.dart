@@ -418,47 +418,126 @@ class _AiHomeState extends State<AiHome> {
 
           showModalBottomSheet(
             context: context,
-            builder: (context) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: Icon(Icons.open_in_new),
-                  title: Text("Open Link"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    if (linkUrl == null) return;
-                    launchLink(Uri.parse(linkUrl), context, Theme.of(context));
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.copy),
-                  title: Text("Copy Link"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Clipboard.setData(ClipboardData(text: linkUrl!));
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text("Link copied")));
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.share),
-                  title: Text("Share Link"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    SharePlus.instance.share(
-                      ShareParams(text: linkUrl, title: "Share Link"),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.close),
-                  title: Text("Close"),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
+            backgroundColor: Colors.transparent,
+            builder: (context) => Container(
+              margin: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.open_in_new_rounded,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      "Open Link",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (linkUrl == null) return;
+                      launchLink(
+                        Uri.parse(linkUrl),
+                        context,
+                        Theme.of(context),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.copy_rounded,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      "Copy Link",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Clipboard.setData(ClipboardData(text: linkUrl!));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Link copied"),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.share_rounded,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onTertiaryContainer,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      "Share Link",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      SharePlus.instance.share(
+                        ShareParams(text: linkUrl, title: "Share Link"),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    child: FilledButton.tonal(
+                      onPressed: () => Navigator.pop(context),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text("Close"),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           );
         }
@@ -673,7 +752,7 @@ class _AiHomeState extends State<AiHome> {
                     const SizedBox(height: 2),
                     Text(
                       _currentDomain,
-                      style: theme.textTheme.titleLarge?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.onPrimaryContainer,
                         overflow: TextOverflow.ellipsis,
@@ -844,7 +923,7 @@ class _AiHomeState extends State<AiHome> {
                               Text(
                                 'Reload',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -875,7 +954,7 @@ class _AiHomeState extends State<AiHome> {
                               Text(
                                 'Go Back',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -903,7 +982,7 @@ class _AiHomeState extends State<AiHome> {
                             Text(
                               'Settings',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],

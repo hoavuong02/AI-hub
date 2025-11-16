@@ -112,7 +112,7 @@ class CustomDrawer extends StatelessWidget {
                           children: [
                             Text(
                               name,
-                              style: theme.textTheme.headlineSmall?.copyWith(
+                              style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: colorScheme.onPrimaryContainer,
                                 letterSpacing: -0.5,
