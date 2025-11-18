@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:aihub/utils/common.dart';
 import 'package:aihub/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -16,23 +17,17 @@ class DownloadManager {
     bool showNotification = true,
   }) async {
     if (url.contains("blob:")) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Cannot download file with blob URL'),
-          duration: Duration(seconds: 3),
-          backgroundColor: Colors.red.shade500,
-          action: SnackBarAction(
-            label: 'OK',
-            textColor: Colors.white,
-            onPressed: () {},
-          ),
-        ),
-      );
+      showSnackBar(context, Text("Unsupported file type"), SnackbarType.error);
       return;
     }
     final int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    showSnackBar(
+      context,
+      Text("Downloading..."),
+      SnackbarType.info,
+      icon: Icons.download,
+    );
 
-    _showEnhancedSnackBar(fileName, context);
     if (showNotification) {
       await _setupAllChannels();
       await AwesomeNotifications().createNotification(
@@ -124,10 +119,13 @@ class DownloadManager {
         );
       }
 
-      debugPrint(
-        '✅ Download successful: $savePath (${_formatFileSize(receivedBytes)})',
+      showSnackBar(
+        context,
+        Row(children: const [Icon(Icons.done), Text("Download complete")]),
+        SnackbarType.success,
+        icon: Icons.done,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       if (showNotification) {
         await _showDownloadErrorNotification(
           notificationId: notificationId,
@@ -137,7 +135,7 @@ class DownloadManager {
         );
       }
 
-      debugPrint('❌ Download failed: $e\n$stackTrace');
+      showSnackBar(context, Text("Download failed"), SnackbarType.error);
       rethrow;
     }
   }
@@ -242,7 +240,7 @@ class DownloadManager {
       content: NotificationContent(
         id: notificationId,
         channelKey: 'downloads_progress',
-        title: progress == 100 ? '🎉 Finalizing...' : '📥 Downloading...',
+        title: progress == 100.0 ? '🎉 Finalizing...' : '📥 Downloading...',
         body: progressBody,
         color: _getProgressColor(progress),
         notificationLayout: NotificationLayout.ProgressBar,
@@ -359,77 +357,5 @@ class DownloadManager {
     if (progress < 30) return Colors.orange.shade600;
     if (progress < 70) return Colors.blue.shade600;
     return Colors.green.shade600;
-  }
-
-  void _showEnhancedSnackBar(String fileName, BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final backgroundColor = colorScheme.primary.withValues(alpha: 0.9);
-    final onBackgroundColor = colorScheme.onPrimary;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: onBackgroundColor.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.download_rounded,
-                size: 20,
-                color: onBackgroundColor,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Download Started',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: onBackgroundColor.withValues(alpha: 0.95),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    fileName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: onBackgroundColor.withValues(alpha: 0.75),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(onBackgroundColor),
-              ),
-            ),
-          ],
-        ),
-        duration: const Duration(seconds: 3),
-        backgroundColor: backgroundColor,
-        elevation: 6,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-    );
   }
 }

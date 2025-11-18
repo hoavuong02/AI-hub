@@ -166,7 +166,6 @@ class SharedPrefs {
     await prefs.setString(_cookiesKey, jsonEncode(cookies));
   }
 
-  // Get cookies (called from Settings)
   static Future<Map<String, List<Map<String, dynamic>>>?>
   getWebViewCookies() async {
     final prefs = await SharedPreferences.getInstance();
@@ -186,7 +185,6 @@ class SharedPrefs {
     return result;
   }
 
-  // Clear cookies (optional)
   static Future<void> clearWebViewCookies() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_cookiesKey);
