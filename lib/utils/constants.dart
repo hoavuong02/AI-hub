@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 final String name = "AI Hub";
-
 final List<Map<String, dynamic>> aiList = [
   {
     'name': 'ChatGPT',
@@ -9,6 +8,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.smart_toy,
     'color': Colors.green,
     'desc': 'Versatile text assistant',
+    'detailedDesc':
+        'OpenAI\'s flagship AI assistant capable of natural conversations, code generation, creative writing, problem-solving, and knowledge integration across diverse topics with advanced reasoning capabilities.',
   },
   {
     'name': 'DuckDuckGo',
@@ -16,6 +17,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.security,
     'color': Colors.orange,
     'desc': 'Private search engine',
+    'detailedDesc':
+        'Privacy-focused search engine that doesn\'t track your searches or create filter bubbles. Features AI-assisted search capabilities while maintaining strict privacy protections and anonymous searching.',
   },
   {
     'name': 'Venice',
@@ -23,6 +26,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.palette,
     'color': Colors.blue,
     'desc': 'Creative image generator',
+    'detailedDesc':
+        'Advanced AI image generation platform that creates stunning visual art, digital illustrations, and creative designs from text descriptions with various artistic styles and customization options.',
   },
   {
     'name': 'Grok',
@@ -30,6 +35,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.emoji_people,
     'color': Colors.amber[800]!,
     'desc': 'Witty xAI assistant',
+    'detailedDesc':
+        'xAI\'s AI assistant known for its witty personality, real-time knowledge access, and rebellious tone. Features a "fun mode" for entertaining conversations while maintaining strong reasoning capabilities.',
   },
   {
     'name': 'Proton',
@@ -37,6 +44,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.lock,
     'color': Colors.purple,
     'desc': 'Privacy-focused AI',
+    'detailedDesc':
+        'Swiss-based privacy-first AI assistant from the creators of Proton Mail. Emphasizes data protection, encrypted interactions, and ethical AI use without compromising on performance.',
   },
   {
     'name': 'Deepseek',
@@ -44,6 +53,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.code,
     'color': Colors.teal,
     'desc': 'Coding specialist AI',
+    'detailedDesc':
+        'Specialized AI model optimized for programming tasks, code explanation, debugging, and software development. Supports multiple programming languages and offers technical problem-solving capabilities.',
   },
   {
     'name': 'Gemini',
@@ -51,6 +62,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.auto_awesome,
     'color': Colors.blueAccent,
     'desc': 'Google AI assistant',
+    'detailedDesc':
+        'Google\'s multimodal AI assistant that can process text, images, audio, and video. Integrates with Google ecosystem and offers real-time information, creative collaboration, and advanced reasoning.',
   },
   {
     'name': 'Claude',
@@ -58,6 +71,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.psychology,
     'color': Colors.deepPurple,
     'desc': 'Thoughtful conversation AI',
+    'detailedDesc':
+        'Anthropic\'s AI assistant focused on safe, nuanced conversations with strong reasoning abilities. Excels at document analysis, creative writing, and maintaining coherent, context-aware dialogues.',
   },
   {
     'name': 'Perplexity',
@@ -65,6 +80,8 @@ final List<Map<String, dynamic>> aiList = [
     'icon': Icons.search,
     'color': Colors.indigo,
     'desc': 'AI search engine',
+    'detailedDesc':
+        'Conversational search engine that combines AI-powered answers with real-time web sources. Provides citations, follow-up questions, and comprehensive research capabilities for accurate information discovery.',
   },
   {
     "name": "Qwen",
@@ -72,6 +89,8 @@ final List<Map<String, dynamic>> aiList = [
     "icon": Icons.record_voice_over,
     "color": Colors.lightGreen,
     "desc": "Alibaba's AI assistant",
+    "detailedDesc":
+        "Alibaba Cloud's multilingual AI model supporting Chinese and English with strong capabilities in dialogue, creative writing, and knowledge tasks. Features extensive context handling and coding assistance.",
   },
   {
     "name": "Mistral",
@@ -79,6 +98,8 @@ final List<Map<String, dynamic>> aiList = [
     "icon": Icons.ac_unit,
     "color": Colors.cyan,
     "desc": "European AI model",
+    "detailedDesc":
+        "French AI company's sophisticated language model known for efficient reasoning, strong coding abilities, and nuanced understanding. Offers balanced performance across various tasks with European data focus.",
   },
   {
     "name": "Blackbox",
@@ -86,6 +107,8 @@ final List<Map<String, dynamic>> aiList = [
     "icon": Icons.terminal,
     "color": Colors.blueGrey,
     "desc": "AI code generator",
+    "detailedDesc":
+        "Specialized AI tool focused on code generation, explanation, and optimization. Supports multiple programming languages, provides code suggestions, and helps developers write better code faster with intelligent autocomplete.",
   },
 ];
 
