@@ -1,3 +1,4 @@
+import 'package:aihub/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:aihub/utils/constants.dart';
 import 'package:aihub/utils/shared_prefs.dart';
@@ -83,31 +84,11 @@ class AiControlScreenState extends State<AiControlScreen>
   void _triggerHapticFeedback() {}
 
   void _showStatusChangeSnackbar(String aiName, bool isEnabled) {
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isEnabled ? Icons.check_circle : Icons.do_not_disturb,
-              color: theme.colorScheme.onPrimary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                '$aiName ${isEnabled ? 'enabled' : 'disabled'}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: theme.colorScheme.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 2),
-      ),
+    showSnackBar(
+      context,
+      Text('$aiName ${isEnabled ? 'enabled' : 'disabled'}'),
+      SnackbarType.info,
+      icon: isEnabled ? Icons.check : Icons.close,
     );
   }
 
@@ -124,12 +105,20 @@ class AiControlScreenState extends State<AiControlScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isEnabled = aiStatus[ai['name']] ?? true;
+    final detailedDesc = ai['detailedDesc'] ?? ai['desc'];
 
     return Container(
       margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 30,
+            spreadRadius: -5,
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -151,6 +140,13 @@ class AiControlScreenState extends State<AiControlScreen>
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: ai['color'].withValues(alpha: 0.3),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
                   child: Icon(ai['icon'], color: Colors.white, size: 32),
                 ),
@@ -194,10 +190,11 @@ class AiControlScreenState extends State<AiControlScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              ai['desc'],
+              detailedDesc,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
                 height: 1.6,
+                fontSize: 15,
               ),
             ),
             const SizedBox(height: 32),
@@ -208,6 +205,9 @@ class AiControlScreenState extends State<AiControlScreen>
                     onPressed: () => Navigator.pop(context),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: const Text('Close'),
                   ),
@@ -221,6 +221,9 @@ class AiControlScreenState extends State<AiControlScreen>
                     },
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: Text(isEnabled ? 'Disable' : 'Enable'),
                   ),
@@ -272,7 +275,7 @@ class AiControlScreenState extends State<AiControlScreen>
         ],
       ),
       body: _isLoading
-          ? _buildLoadingState(theme, colorScheme)
+          ? _buildSimpleLoadingState(theme, colorScheme)
           : AnimatedBuilder(
               animation: _animationController,
               builder: (context, child) {
@@ -289,49 +292,54 @@ class AiControlScreenState extends State<AiControlScreen>
     );
   }
 
-  Widget _buildLoadingState(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildSimpleLoadingState(ThemeData theme, ColorScheme colorScheme) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: Stack(
-              children: [
-                CircularProgressIndicator(
-                  strokeWidth: 3,
-                  color: colorScheme.primary,
-                ),
-                Center(
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    color: colorScheme.primary,
-                    size: 28,
-                  ),
-                ),
-              ],
+          // Simple animated container with icon
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Loading AI Ecosystem',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: colorScheme.onSurface,
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              color: colorScheme.primary,
+              size: 40,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Configuring your intelligent assistants...',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
+
+          // Main title with fade animation
+          AnimatedOpacity(
+            opacity: _isLoading ? 1 : 0,
+            duration: const Duration(milliseconds: 600),
+            child: Text(
+              'AI Hub',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+                fontSize: 32,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Subtitle
+          Text(
+            'Loading your AI assistants...',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Simple progress indicator
           SizedBox(
-            width: 200,
+            width: 150,
             child: LinearProgressIndicator(
               backgroundColor: colorScheme.surfaceContainerHighest,
               color: colorScheme.primary,
@@ -343,6 +351,7 @@ class AiControlScreenState extends State<AiControlScreen>
     );
   }
 
+  // Rest of the existing methods remain exactly the same...
   Widget _buildContent(ThemeData theme, ColorScheme colorScheme) {
     final isDefaultAiProtected = !_loadLastOpenedAi;
     final enabledCount = aiStatus.values.where((enabled) => enabled).length;
@@ -675,7 +684,6 @@ class AiControlScreenState extends State<AiControlScreen>
           value: isEnabled,
           onChanged: isSwitchDisabled ? null : onChanged,
 
-          activeColor: colorScheme.primary,
           activeTrackColor: colorScheme.primary.withValues(alpha: 0.5),
           inactiveThumbColor: colorScheme.outline,
           inactiveTrackColor: colorScheme.outline.withValues(alpha: 0.3),
