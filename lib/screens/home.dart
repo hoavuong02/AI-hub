@@ -147,7 +147,13 @@ class _AiHomeState extends State<AiHome> {
       });
       _createWebViewForTab(lastIndex);
     } catch (e) {
-      debugPrint('Error loading last AI index: $e');
+      if (mounted) {
+        showSnackBar(
+          context,
+          Text("Failed to load last opened AI"),
+          SnackbarType.error,
+        );
+      }
 
       if (_enabledAiList.isNotEmpty) {
         setState(() {
@@ -482,14 +488,11 @@ class _AiHomeState extends State<AiHome> {
                     onTap: () {
                       Navigator.pop(context);
                       Clipboard.setData(ClipboardData(text: linkUrl!));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Link copied"),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                      showSnackBar(
+                        context,
+                        Text("Link copied"),
+                        SnackbarType.info,
+                        icon: Icons.copy_rounded,
                       );
                     },
                   ),
@@ -565,8 +568,6 @@ class _AiHomeState extends State<AiHome> {
   }
 
   void _handleShareData(dynamic shareData) {
-    debugPrint('Received share data: $shareData');
-
     try {
       String shareText = '';
 
@@ -593,10 +594,14 @@ class _AiHomeState extends State<AiHome> {
       if (shareText.trim().isNotEmpty) {
         SharePlus.instance.share(ShareParams(text: shareText));
       } else {
-        debugPrint('No share content found');
+        if (mounted) {
+          showSnackBar(context, Text("No data to share"), SnackbarType.error);
+        }
       }
     } catch (e) {
-      debugPrint('Error handling share data: $e');
+      if (mounted) {
+        showSnackBar(context, Text("No data to share"), SnackbarType.error);
+      }
     }
   }
 
@@ -610,6 +615,15 @@ class _AiHomeState extends State<AiHome> {
 
   Future<void> _handleSettingsReturn() async {
     await _loadEnabledAiList();
+    int? fontSize = fontSizes[await SharedPrefs.getFontSize()];
+    if (fontSize != _defaultFontSize) {
+      for (var controller in _controllers) {
+        if (controller == null) continue;
+        controller.setSettings(
+          settings: InAppWebViewSettings(defaultFontSize: fontSize),
+        );
+      }
+    }
 
     if (_selectedIndex >= _enabledAiList.length) {
       _selectedIndex = 0;
@@ -688,7 +702,13 @@ class _AiHomeState extends State<AiHome> {
         if (!didPop) {
           _handleBackNavigation();
         } else {
-          debugPrint('Pop occurred with result: $result');
+          if (mounted) {
+            showSnackBar(
+              context,
+              Text("Press back again to exit"),
+              SnackbarType.warning,
+            );
+          }
         }
       },
       child: Scaffold(
