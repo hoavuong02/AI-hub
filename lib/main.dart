@@ -1,8 +1,9 @@
+import 'package:aihub/screens/splash.dart';
 import 'package:aihub/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'screens/ai_home.dart';
+import 'screens/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +40,8 @@ class MyApp extends StatelessWidget {
           themeMode: ThemeMode.system,
           theme: ThemeData(useMaterial3: true, colorScheme: lightScheme),
           darkTheme: ThemeData(useMaterial3: true, colorScheme: darkScheme),
-          home: const AiHome(),
+          home: const SplashScreen(),
+          routes: {"/home": (context) => const AiHome()},
         );
       },
     );
