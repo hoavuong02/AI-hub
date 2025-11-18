@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:aihub/screens/ai_control.dart';
+import 'package:aihub/screens/control.dart';
+import 'package:aihub/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:aihub/utils/constants.dart';
 import 'package:aihub/utils/shared_prefs.dart';
@@ -146,47 +147,14 @@ class SettingsScreenState extends State<SettingsScreen> {
       await SharePlus.instance.share(
         ShareParams(text: 'AIHub Backup', files: [XFile(file.path)]),
       );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                const SizedBox(width: 8),
-                const Text('Backup created successfully!'),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
+      showSnackBar(
+        context,
+        Text('Backup created successfully!'),
+        SnackbarType.success,
+        icon: Icons.check,
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error, color: Theme.of(context).colorScheme.onError),
-                const SizedBox(width: 8),
-                Text('Backup failed: $e'),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
+      showSnackBar(context, Text('Backup failed: $e'), SnackbarType.error);
     } finally {
       if (mounted) {
         setState(() {
@@ -276,27 +244,8 @@ class SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (result == null || result.files.single.path == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(
-                    Icons.info,
-                    color: Theme.of(context).colorScheme.onSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('No file selected'),
-                ],
-              ),
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-        }
+        showSnackBar(context, Text('No file selected'), SnackbarType.info);
+
         setState(() {
           _isRestoring = false;
         });
@@ -335,48 +284,16 @@ class SettingsScreenState extends State<SettingsScreen> {
           }
         }
       }
+      showSnackBar(
+        context,
+        Text('Settings restored successfully!'),
+        SnackbarType.success,
+        icon: Icons.check,
+      );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                const SizedBox(width: 8),
-                const Text('Settings restored successfully!'),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-        _loadSettings();
-      }
+      _loadSettings();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error, color: Theme.of(context).colorScheme.onError),
-                const SizedBox(width: 8),
-                Text('Restore failed: $e'),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
+      showSnackBar(context, Text('Restore failed: $e'), SnackbarType.error);
     } finally {
       if (mounted) {
         setState(() {
@@ -437,19 +354,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                 secondary: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.8),
-                        colorScheme.secondary.withValues(alpha: 0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: colorScheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.auto_awesome_motion_rounded,
-                    color: colorScheme.onPrimary,
+                    color: colorScheme.onPrimaryContainer,
                     size: 24,
                   ),
                 ),
@@ -466,19 +376,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colorScheme.tertiary.withValues(alpha: 0.8),
-                          colorScheme.primary.withValues(alpha: 0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: colorScheme.tertiaryContainer,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.smart_toy_rounded,
-                      color: colorScheme.onPrimary,
+                      color: colorScheme.onTertiaryContainer,
                       size: 24,
                     ),
                   ),
@@ -544,19 +447,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.secondary.withValues(alpha: 0.8),
-                        colorScheme.tertiary.withValues(alpha: 0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: colorScheme.secondaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.tune_rounded,
-                    color: colorScheme.onPrimary,
+                    color: colorScheme.onSecondaryContainer,
                     size: 24,
                   ),
                 ),
@@ -575,9 +471,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 trailing: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.5,
-                    ),
+                    color: colorScheme.surfaceContainerHighest,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -604,19 +498,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.8),
-                        colorScheme.secondary.withValues(alpha: 0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: colorScheme.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.text_fields_rounded,
-                    color: colorScheme.onPrimary,
+                    color: colorScheme.onPrimaryContainer,
                     size: 24,
                   ),
                 ),
@@ -679,6 +566,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                               'Export your settings and login data to a secure file',
                           icon: Icons.backup_rounded,
                           color: colorScheme.primary,
+                          colorContainer: colorScheme.primaryContainer,
+                          onColorContainer: colorScheme.onPrimaryContainer,
                           isLoading: _isBackingUp,
                           onTap: _backupSettings,
                           theme: theme,
@@ -692,6 +581,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                               'Import your previous settings from a backup file',
                           icon: Icons.restore_rounded,
                           color: colorScheme.secondary,
+                          colorContainer: colorScheme.secondaryContainer,
+                          onColorContainer: colorScheme.onSecondaryContainer,
                           isLoading: _isRestoring,
                           onTap: _restoreSettings,
                           theme: theme,
@@ -707,6 +598,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                             'Export your settings and login data to a secure file',
                         icon: Icons.backup_rounded,
                         color: colorScheme.primary,
+                        colorContainer: colorScheme.primaryContainer,
+                        onColorContainer: colorScheme.onPrimaryContainer,
                         isLoading: _isBackingUp,
                         onTap: _backupSettings,
                         theme: theme,
@@ -718,6 +611,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                             'Import your previous settings from a backup file',
                         icon: Icons.restore_rounded,
                         color: colorScheme.secondary,
+                        colorContainer: colorScheme.secondaryContainer,
+                        onColorContainer: colorScheme.onSecondaryContainer,
                         isLoading: _isRestoring,
                         onTap: _restoreSettings,
                         theme: theme,
@@ -742,14 +637,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.primary.withValues(alpha: 0.2),
-                colorScheme.secondary.withValues(alpha: 0.2),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: colorScheme.primary, size: 24),
@@ -768,12 +656,14 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildExpressiveCard({required Widget child, VoidCallback? onTap}) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Card(
       elevation: 2,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color: theme.colorScheme.surface,
+      color: colorScheme.surface,
+      surfaceTintColor: colorScheme.surfaceTint,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
@@ -787,14 +677,19 @@ class SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required IconData icon,
     required Color color,
+    required Color colorContainer,
+    required Color onColorContainer,
     required bool isLoading,
     required VoidCallback onTap,
     required ThemeData theme,
   }) {
+    final colorScheme = theme.colorScheme;
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      color: color.withValues(alpha: 0.1),
+      color: colorContainer.withValues(alpha: 0.4),
+      surfaceTintColor: colorContainer,
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: isLoading ? null : onTap,
@@ -808,8 +703,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                   top: -10,
                   right: -10,
                   child: Opacity(
-                    opacity: 0.08,
-                    child: Icon(icon, size: 100, color: color),
+                    opacity: 0.1,
+                    child: Icon(icon, size: 100, color: onColorContainer),
                   ),
                 ),
 
@@ -820,10 +715,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.2),
+                        color: onColorContainer.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(icon, color: color, size: 24),
+                      child: Icon(icon, color: onColorContainer, size: 24),
                     ),
 
                     Column(
@@ -833,7 +728,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           title,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
+                            color: colorScheme.onSurface,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -842,7 +737,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           subtitle,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -853,8 +748,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                     isLoading
                         ? LinearProgressIndicator(
                             backgroundColor:
-                                theme.colorScheme.surfaceContainerHighest,
-                            color: color,
+                                colorScheme.surfaceContainerHighest,
+                            color: onColorContainer,
                             borderRadius: BorderRadius.circular(8),
                           )
                         : Container(
@@ -863,7 +758,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.2),
+                              color: onColorContainer.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -872,14 +767,14 @@ class SettingsScreenState extends State<SettingsScreen> {
                                 Text(
                                   'Get Started',
                                   style: theme.textTheme.labelLarge?.copyWith(
-                                    color: color,
+                                    color: onColorContainer,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Icon(
                                   Icons.arrow_forward_rounded,
-                                  color: color,
+                                  color: onColorContainer,
                                   size: 16,
                                 ),
                               ],
