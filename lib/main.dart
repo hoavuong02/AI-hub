@@ -1,4 +1,3 @@
-import 'package:aihub/screens/splash.dart';
 import 'package:aihub/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -14,9 +13,14 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return DynamicColorBuilder(
@@ -40,8 +44,7 @@ class MyApp extends StatelessWidget {
           themeMode: ThemeMode.system,
           theme: ThemeData(useMaterial3: true, colorScheme: lightScheme),
           darkTheme: ThemeData(useMaterial3: true, colorScheme: darkScheme),
-          home: const SplashScreen(),
-          routes: {"/home": (context) => const AiHome()},
+          home: AiHome(),
         );
       },
     );

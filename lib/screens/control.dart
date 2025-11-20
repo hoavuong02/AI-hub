@@ -297,7 +297,6 @@ class AiControlScreenState extends State<AiControlScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Simple animated container with icon
           Container(
             width: 80,
             height: 80,
@@ -313,7 +312,6 @@ class AiControlScreenState extends State<AiControlScreen>
           ),
           const SizedBox(height: 32),
 
-          // Main title with fade animation
           AnimatedOpacity(
             opacity: _isLoading ? 1 : 0,
             duration: const Duration(milliseconds: 600),
@@ -328,7 +326,6 @@ class AiControlScreenState extends State<AiControlScreen>
           ),
           const SizedBox(height: 16),
 
-          // Subtitle
           Text(
             'Loading your AI assistants...',
             style: theme.textTheme.bodyLarge?.copyWith(
@@ -337,7 +334,6 @@ class AiControlScreenState extends State<AiControlScreen>
           ),
           const SizedBox(height: 32),
 
-          // Simple progress indicator
           SizedBox(
             width: 150,
             child: LinearProgressIndicator(
@@ -351,7 +347,6 @@ class AiControlScreenState extends State<AiControlScreen>
     );
   }
 
-  // Rest of the existing methods remain exactly the same...
   Widget _buildContent(ThemeData theme, ColorScheme colorScheme) {
     final isDefaultAiProtected = !_loadLastOpenedAi;
     final enabledCount = aiStatus.values.where((enabled) => enabled).length;
