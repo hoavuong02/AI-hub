@@ -12,8 +12,8 @@ final List<Map<String, dynamic>> aiList = [
         'OpenAI\'s flagship AI assistant capable of natural conversations, code generation, creative writing, problem-solving, and knowledge integration across diverse topics with advanced reasoning capabilities.',
   },
   {
-    'name': 'DuckDuckGo',
-    'url': 'https://duck.ai',
+    'name': 'Duck AI',
+    'url': 'https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat&duckai=1',
     'icon': Icons.security,
     'color': Colors.orange,
     'desc': 'Private search engine',
@@ -112,6 +112,10 @@ final List<Map<String, dynamic>> aiList = [
   },
 ];
 
+final Map<String, String> aisDomains = Map.fromEntries(
+  aiList.map((ai) => MapEntry(Uri.parse(ai['url']).host, ai['name'])),
+);
+
 final Map<String, int> fontSizes = {
   'x-small': 14,
   'small': 15,
@@ -125,23 +129,23 @@ final userAgent =
 
 final String shareOverrideJS = """
 (function() {
-  // Store original share function if it exists
+  
   const originalShare = navigator.share;
   
-  // Override navigator.share
+  
   navigator.share = function(shareData) {
     console.log('Share intercepted:', shareData);
     
-    // Send share data to Flutter
+    
     if (window.flutter_inappwebview) {
       window.flutter_inappwebview.callHandler('shareHandler', shareData);
     }
     
-    // Return a promise that resolves (simulating successful share)
+    
     return Promise.resolve();
   };
   
-  // Also handle click events on share buttons (as fallback)
+  
   document.addEventListener('click', function(e) {
     const target = e.target;
     const isShareButton = target.closest('[class*="share"], [id*="share"]') ||
@@ -151,7 +155,7 @@ final String shareOverrideJS = """
       e.preventDefault();
       e.stopPropagation();
       
-      // Try to extract share data from common patterns
+      
       const title = document.title;
       const url = window.location.href;
       const shareData = { title: title, url: url, text: title };

@@ -183,13 +183,19 @@ class _AiHomeState extends State<AiHome> {
       _createWebViewForTab(index);
     } else {
       setState(() {
-        _currentDomain = _getDomainFromUrl(_currentUrls[index]);
+        _currentDomain = _getBestDomainName(_currentUrls[index]);
       });
     }
 
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  String _getBestDomainName(String url) {
+    final currentDomain = Uri.parse(url).host;
+    final aiName = aisDomains[currentDomain];
+    return aiName ?? currentDomain;
   }
 
   void _createWebViewForTab(int index) {
@@ -315,7 +321,7 @@ class _AiHomeState extends State<AiHome> {
         }
         if (index == _selectedIndex) {
           setState(() {
-            _currentDomain = url?.host ?? name;
+            _currentDomain = _getBestDomainName(url.toString());
           });
         }
       },
@@ -335,7 +341,7 @@ class _AiHomeState extends State<AiHome> {
         }
         if (index == _selectedIndex) {
           setState(() {
-            _currentDomain = url?.host ?? name;
+            _currentDomain = _getBestDomainName(url.toString());
           });
         }
 
@@ -390,7 +396,7 @@ class _AiHomeState extends State<AiHome> {
         }
         if (index == _selectedIndex) {
           setState(() {
-            _currentDomain = url?.host ?? name;
+            _currentDomain = _getBestDomainName(url.toString());
           });
         }
       },
@@ -1055,7 +1061,7 @@ class _AiHomeState extends State<AiHome> {
                   _selectedIndex < _errorMessages.length &&
                   _errorMessages[_selectedIndex] == null)
                 Positioned.fill(
-                  child: LoadingWidget(
+                  child: ExpressiveLoadingWidget(
                     aiName: _enabledAiList[_selectedIndex]['name'],
                     domain: _currentDomain,
                   ),
