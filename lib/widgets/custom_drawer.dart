@@ -34,6 +34,7 @@ class CustomDrawer extends StatelessWidget {
       elevation: 24,
       shadowColor: colorScheme.shadow.withValues(alpha: 0.4),
       child: SafeArea(
+        top: false,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -94,7 +95,9 @@ class CustomDrawer extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: colorScheme.primary.withValues(alpha: 0.3),
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.3,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -134,7 +137,7 @@ class CustomDrawer extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-  
+
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -170,7 +173,7 @@ class CustomDrawer extends StatelessWidget {
                   ],
                 ),
               ),
-  
+
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -192,7 +195,9 @@ class CustomDrawer extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: colorScheme.primary.withValues(alpha: 0.1),
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -216,7 +221,9 @@ class CustomDrawer extends StatelessWidget {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: colorScheme.primary.withValues(alpha: 0.1),
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
@@ -230,7 +237,7 @@ class CustomDrawer extends StatelessWidget {
                           ],
                         ),
                       ),
-  
+
                       if (enabledAiList.isEmpty)
                         Expanded(
                           child: _buildEmptyState(context, theme, colorScheme),
@@ -243,7 +250,7 @@ class CustomDrawer extends StatelessWidget {
                   ),
                 ),
               ),
-  
+
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -285,7 +292,9 @@ class CustomDrawer extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () async {
                           launchLink(
-                            Uri.parse('https://www.github.com/SilentCoderHere/'),
+                            Uri.parse(
+                              'https://www.github.com/SilentCoderHere/',
+                            ),
                             context,
                             theme,
                           );
