@@ -17,20 +17,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.4'
-          cache: true
-
       # -------------------------
-      # FIXED VERSION STEPS
+      # VERSION UPDATE FIRST (before any Flutter setup)
       # -------------------------
       - name: Get Current Version and Increment Build
         id: version
@@ -63,11 +51,13 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION_PART" >> $GITHUB_OUTPUT
+          echo "version_part=$VERSION_PART" >> $GITHUB_OUTPUT
+          echo "new_build=$NEW_BUILD" >> $GITHUB_OUTPUT
 
       - name: Update Version in pubspec.yaml
         run: |
           sed -i "s/^version: .*/version: ${{ steps.version.outputs.new_version }}/" pubspec.yaml
-          echo "Updated to: ${{ steps.version.outputs.new_version }}"
+          echo "Updated pubspec.yaml to: ${{ steps.version.outputs.new_version }}"
 
       - name: Configure Git
         run: |
@@ -81,6 +71,21 @@ jobs:
           git push
 
       # -------------------------
+      # FLUTTER SETUP (after version update)
+      # -------------------------
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.4'
+          cache: true
+
+      # -------------------------
       # KEYSTORE & BUILD
       # -------------------------
       - name: Create Keystore from Secrets
@@ -89,6 +94,13 @@ jobs:
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Verify Version Before Build
+        run: |
+          echo "=== Final Version Check ==="
+          echo "pubspec.yaml version: $(grep '^version:' pubspec.yaml | awk '{print $2}')"
+          echo "Flutter version info:"
+          flutter --version
 
       - name: Build Split APKs
         run: flutter build apk --release --split-per-abi
