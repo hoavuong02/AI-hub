@@ -1,0 +1,14 @@
+AI Hub is an app that lets you use many AI tools in one place. No more switching between apps!
+
+Key features:
+- Easy to use: Simple tabs to switch quickly
+- Modern design: Uses Material Design 3
+- Remembers last AI: Opens the AI you used last time
+- Control your AIs: Choose which ones to show or disable any you don’t want
+- Can backup & restore cookies: Save your logins and restore them anytime
+- Auto theme change: Switches to light or dark mode automatically
+- Dynamic colors: Beautiful colors on Android 12 and newer
+
+Perfect for people who use many AI tools every day. Fully open-source and free.
+
+Use all your AI tools in one place!
