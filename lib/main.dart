@@ -2,15 +2,26 @@ import 'package:aihub/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  bool hasPermission = await AwesomeNotifications().isNotificationAllowed();
-  if (!hasPermission) {
-    await AwesomeNotifications().requestPermissionToSendNotifications();
-  }
+  await _checkNotificationPermission();
   runApp(const MyApp());
+}
+
+Future<void> _checkNotificationPermission() async {
+  final prefs = await SharedPreferences.getInstance();
+  final bool hasBeenPrompted = prefs.getBool('first_time') ?? false;
+
+  if (!hasBeenPrompted) {
+    bool hasPermission = await AwesomeNotifications().isNotificationAllowed();
+    if (!hasPermission) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
+    await prefs.setBool('first_time', true);
+  }
 }
 
 class MyApp extends StatefulWidget {
