@@ -255,6 +255,33 @@ class _AiHomeState extends State<AiHome> {
     };
   }
 
+  bool _allowConnectivity(String url) {
+    debugPrint("Override: $url");
+
+    // Block about:blank
+    if (url.startsWith("about:blank")) {
+      debugPrint("Blocked (about:blank): $url");
+      return false;
+    }
+
+    // Block non-https
+    if (!url.startsWith("https://")) {
+      debugPrint("Blocked (non-https): $url");
+      return false;
+    }
+
+    // Allow allowed domains
+    for (var d in allowedDomains) {
+      // Add automatic https check
+      if (url.startsWith("https://$d") || url.startsWith(d)) {
+        return true;
+      }
+    }
+
+    debugPrint("Blocked: $url");
+    return false;
+  }
+
   Widget _buildWebView(int index) {
     if (index < 0 || index >= _enabledAiList.length) {
       return _buildPlaceholder(0);
@@ -326,7 +353,9 @@ class _AiHomeState extends State<AiHome> {
         }
       },
       onLoadStop: (controller, url) async {
-        await controller.evaluateJavascript(source: shareOverrideJS);
+        if (!url.toString().contains('lumo.proton.me')) {
+          await controller.evaluateJavascript(source: shareOverrideJS);
+        }
 
         controller.setSettings(
           settings: InAppWebViewSettings(defaultFontSize: _defaultFontSize),
@@ -400,7 +429,22 @@ class _AiHomeState extends State<AiHome> {
           });
         }
       },
+      shouldInterceptRequest: (controller, request) async {
+        final url = request.url.toString();
+        if (!_allowConnectivity(url)) {
+          return WebResourceResponse(
+            contentType: "text/plain",
+            data: Uint8List.fromList([]),
+          );
+        }
+
+        return null; // allowed
+      },
       shouldOverrideUrlLoading: (controller, navigationAction) async {
+        final url = navigationAction.request.url.toString();
+        if (!_allowConnectivity(url)) {
+          return NavigationActionPolicy.CANCEL;
+        }
         return NavigationActionPolicy.ALLOW;
       },
       onDownloadStartRequest: (controller, downloadStartRequest) async {
