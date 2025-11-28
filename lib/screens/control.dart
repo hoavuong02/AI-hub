@@ -253,7 +253,7 @@ class AiControlScreenState extends State<AiControlScreen>
           opacity: _isLoading ? 0 : 1,
           duration: const Duration(milliseconds: 300),
           child: Text(
-            'AI Control Center',
+            'AI Control',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -265,14 +265,6 @@ class AiControlScreenState extends State<AiControlScreen>
         scrolledUnderElevation: 1,
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
-        actions: [
-          if (!_isLoading)
-            IconButton(
-              onPressed: _loadAiStatus,
-              icon: Icon(Icons.refresh_rounded, color: colorScheme.primary),
-              tooltip: 'Refresh AI Status',
-            ),
-        ],
       ),
       body: _isLoading
           ? _buildSimpleLoadingState(theme, colorScheme)
