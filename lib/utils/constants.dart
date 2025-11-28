@@ -39,7 +39,7 @@ final List<Map<String, dynamic>> aiList = [
         'xAI\'s AI assistant known for its witty personality, real-time knowledge access, and rebellious tone. Features a "fun mode" for entertaining conversations while maintaining strong reasoning capabilities.',
   },
   {
-    'name': 'Proton',
+    'name': 'Lumo',
     'url': 'https://lumo.proton.me/',
     'icon': Icons.lock,
     'color': Colors.purple,
@@ -110,6 +110,70 @@ final List<Map<String, dynamic>> aiList = [
     "detailedDesc":
         "Specialized AI tool focused on code generation, explanation, and optimization. Supports multiple programming languages, provides code suggestions, and helps developers write better code faster with intelligent autocomplete.",
   },
+];
+
+List<String> allowedDomains = [
+  // ChatGPT
+  "cdn.auth0.com",
+  "auth.openai.com",
+  "chatgpt.com",
+  "openai.com",
+  "fileserviceuploadsperm.blob.core.windows.net",
+  "cdn.oaistatic.com",
+  "oaiusercontent.com",
+
+  // DuckDuckGo
+  "duckduckgo.com",
+
+  // Venice
+  "venice.ai",
+
+  // Grok
+  "grok.com",
+
+  // Lumo
+  "account.proton.me",
+  "lumo.proton.me",
+
+  // Deepseek
+  "chat.deepseek.com",
+  "cdn.deepseek.com",
+  "static.deepseek.com",
+
+  // Gemini
+  "gemini.google.com",
+  "fonts.gstatic.com",
+  "www.gstatic.com",
+
+  // Claude
+  "claude.ai",
+
+  // Perplexity
+  "www.perplexity.ai",
+  "pplx-next-static-public.perplexity.ai",
+
+  // Qwen
+  "chat.qwen.ai",
+  "cdnjs.cloudflare.com",
+  "assets.alicdn.com",
+  "img.alicdn.com",
+  "at.alicdn.com",
+  "d.alicdn.com",
+  "o.alicdn.com",
+  "g.alicdn.com",
+
+  // Mistral
+  "cdn.auth0.com",
+  "chat.mistral.ai",
+  "mistral.ai",
+  "api.mistral.ai",
+  "console.mistral.ai",
+  "mistralcdn.net",
+
+  // Blackbox
+  "www.blackbox.ai",
+  "js.stripe.com",
+  "m.stripe.network",
 ];
 
 final Map<String, String> aisDomains = Map.fromEntries(
