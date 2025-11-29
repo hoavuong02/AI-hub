@@ -257,33 +257,33 @@ class _AiHomeState extends State<AiHome> {
 
   bool _allowConnectivity(String url) {
     debugPrint("Override: $url");
-  
+
     final uri = Uri.tryParse(url);
     if (uri == null) {
       debugPrint("Blocked (invalid URI): $url");
       return false;
     }
-  
+
     final host = uri.host;
-  
+
     // Block about:blank
     if (url.startsWith("about:blank")) {
       debugPrint("Blocked (about:blank): $url");
       return false;
     }
-  
+
     // Block non-https
     if (uri.scheme != "https") {
       debugPrint("Blocked (non-https): $url");
       return false;
     }
-  
+
     // Allow only exact hosts
     if (allowedDomains.contains(host)) {
       debugPrint("Allowed: $url");
       return true;
     }
-  
+
     debugPrint("Blocked (unlisted host: $host): $url");
     return false;
   }
