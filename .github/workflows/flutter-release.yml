@@ -80,7 +80,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       # Build fat APK
-      - name: Build Split APKs
+      - name: Build Fat APK
         run: flutter build apk --release
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
