@@ -163,7 +163,6 @@ List<String> allowedDomains = [
   "g.alicdn.com",
 
   // Mistral
-  "cdn.auth0.com",
   "chat.mistral.ai",
   "mistral.ai",
   "api.mistral.ai",
