@@ -256,36 +256,55 @@ class _AiHomeState extends State<AiHome> {
   }
 
   bool _allowConnectivity(String url) {
-    debugPrint("Override: $url");
+    if (url == "about:blank") {
+      return true;
+    }
 
     final uri = Uri.tryParse(url);
     if (uri == null) {
-      debugPrint("Blocked (invalid URI): $url");
       return false;
     }
 
     final host = uri.host;
-
-    // Block about:blank
-    if (url.startsWith("about:blank")) {
-      debugPrint("Blocked (about:blank): $url");
+    if (!url.startsWith("https://")) {
       return false;
     }
 
-    // Block non-https
-    if (uri.scheme != "https") {
-      debugPrint("Blocked (non-https): $url");
+    bool allowed = false;
+    for (String domain in allowedDomains) {
+      if (host.endsWith(domain)) {
+        allowed = true;
+        break;
+      }
+    }
+
+    if (!allowed) {
+      if (host == "login.microsoftonline.com" ||
+          host == "accounts.google.com" ||
+          host == "appleid.apple.com") {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _resetChat();
+        });
+      }
       return false;
     }
+    return true;
+  }
 
-    // Allow only exact hosts
-    if (allowedDomains.contains(host)) {
-      debugPrint("Allowed: $url");
-      return true;
+  void _resetChat() async {
+    if (_selectedIndex < _controllers.length &&
+        _controllers[_selectedIndex] != null) {
+      final controller = _controllers[_selectedIndex]!;
+
+      await InAppWebViewController.clearAllCache();
+      await controller.clearHistory();
+      await CookieManager.instance().deleteAllCookies();
+
+      final originalUrl = _enabledAiList[_selectedIndex]['url'];
+      await controller.loadUrl(
+        urlRequest: URLRequest(url: WebUri(originalUrl)),
+      );
     }
-
-    debugPrint("Blocked (unlisted host: $host): $url");
-    return false;
   }
 
   Widget _buildWebView(int index) {
@@ -311,6 +330,14 @@ class _AiHomeState extends State<AiHome> {
         userAgent: userAgent,
         disableContextMenu: true,
         disableLongPressContextMenuOnLinks: true,
+        allowContentAccess: false,
+        allowFileAccess: false,
+        databaseEnabled: false,
+        saveFormData: false,
+        geolocationEnabled: false,
+        allowFileAccessFromFileURLs: false,
+        allowUniversalAccessFromFileURLs: false,
+        thirdPartyCookiesEnabled: false,
       ),
       onWebViewCreated: (controller) async {
         controller.addJavaScriptHandler(
@@ -345,7 +372,12 @@ class _AiHomeState extends State<AiHome> {
           }
         }
       },
-      onLoadStart: (controller, url) {
+      onLoadStart: (controller, url) async {
+        if (!_allowConnectivity(url.toString())) {
+          await controller.stopLoading();
+          return;
+        }
+
         if (index < _isLoadingList.length) {
           setState(() {
             _isLoadingList[index] = true;
@@ -435,20 +467,28 @@ class _AiHomeState extends State<AiHome> {
           });
         }
       },
+
       shouldInterceptRequest: (controller, request) async {
         final url = request.url.toString();
-        if (!_allowConnectivity(url)) {
+
+        final allowed = _allowConnectivity(url);
+        if (!allowed) {
           return WebResourceResponse(
-            contentType: "text/plain",
-            data: Uint8List.fromList([]),
+            contentType: "text/javascript",
+            data: Uint8List(0),
+            statusCode: 403,
+            reasonPhrase: "Forbidden",
           );
         }
 
-        return null; // allowed
+        return null;
       },
+
       shouldOverrideUrlLoading: (controller, navigationAction) async {
         final url = navigationAction.request.url.toString();
-        if (!_allowConnectivity(url)) {
+        final allowed = _allowConnectivity(url);
+
+        if (!allowed) {
           return NavigationActionPolicy.CANCEL;
         }
         return NavigationActionPolicy.ALLOW;
