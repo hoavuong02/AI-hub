@@ -25,9 +25,11 @@
 
 ### 🧠 Overview
 
+>__I built this app for my personal use, but my friends like it and have recommended that I upload it to GitHub, even though updates are not frequent for various reasons.__
+
 **AI Hub** is a clean, simple multi-AI app built with MD3.
 
-It supports dynamic colors, theme match, tab switching, background running, text control, and data backup — all without trackers.
+It supports dynamic colors, theme match, tab switching, background running, text control, and data backup.
 
 ---
 
@@ -43,7 +45,6 @@ It supports dynamic colors, theme match, tab switching, background running, text
 | 📦 **Backup & Restore** | Save and load your app data |
 | 🚫 **Disable AIs** | Turn off any AI you don’t want |
 | 🔤 **Font size control** | Adjust WebView text size |
-| 🛡️ **No trackers** | Only required network calls are made |
 
 ---
 
@@ -109,8 +110,3 @@ To start contributing, fork this repo, make your changes, and open a pull reques
 If you find **AI Hub** useful, please **star ⭐**.
 
 ---
-
-## 📜 License
-
-Licensed under the **GNU General Public License v3.0 (GPLv3)**.  
-See [LICENSE](LICENSE) for details.
