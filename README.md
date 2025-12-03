@@ -42,7 +42,7 @@ It supports dynamic colors, theme match, tab switching, background running, text
 | 🌗 **Dark & Light themes** | Follows your phone theme |
 | 🗂️ **Tabbed layout** | Switch between AIs easily |
 | 🔁 **Background switching** | Other AIs keep running while you switch |
-| 📦 **Backup & Restore** | Save and load your app data |
+| 📦 **Backup & Restore** `(Experimental)` | Save and load your app data |
 | 🚫 **Disable AIs** | Turn off any AI you don’t want |
 | 🔤 **Font size control** | Adjust WebView text size |
 
