@@ -1,7 +1,7 @@
 name: aihub
 description: AI Hub is a lightweight Flutter app that brings multiple AI assistants together in one simple interface.
 publish_to: 'none' 
-version: 1.0.1+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.9.2
