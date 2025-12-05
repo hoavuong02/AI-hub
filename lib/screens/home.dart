@@ -373,11 +373,6 @@ class _AiHomeState extends State<AiHome> {
         }
       },
       onLoadStart: (controller, url) async {
-        if (!_allowConnectivity(url.toString())) {
-          await controller.stopLoading();
-          return;
-        }
-
         if (index < _isLoadingList.length) {
           setState(() {
             _isLoadingList[index] = true;
