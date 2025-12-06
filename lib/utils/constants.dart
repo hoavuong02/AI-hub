@@ -103,7 +103,7 @@ final List<Map<String, dynamic>> aiList = [
   },
   {
     "name": "Blackbox",
-    "url": "https://www.blackbox.ai/",
+    "url": "https://app.blackbox.ai/",
     "icon": Icons.terminal,
     "color": Colors.blueGrey,
     "desc": "AI code generator",
