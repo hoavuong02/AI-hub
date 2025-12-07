@@ -48,6 +48,14 @@ It supports dynamic colors, theme match, tab switching, background running, text
 
 ---
 
+## 🙄 I Failed
+
+> I tried my best to implement a tracker blocker by restricting unnecessary connections. After putting in a lot of hard work, I was unable to successfully restrict those connections.
+
+**I would be thankful to anyone who can implement this feature correctly.**
+
+
+
 ## 📥 Get the App
 
 <!-- [<img src="images/get-it/get-it-on-fdroid.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.foos.aihub/) -->
