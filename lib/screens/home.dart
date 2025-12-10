@@ -10,6 +10,7 @@ import '../utils/constants.dart';
 import '../utils/shared_prefs.dart';
 import '../widgets/custom_drawer.dart';
 import '../widgets/error_widget.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/loading_widget.dart';
 
 class AiHome extends StatefulWidget {
@@ -97,12 +98,14 @@ class _AiHomeState extends State<AiHome> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.psychology_rounded,
-              size: 40,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.3),
+            SvgPicture.string(
+              iconSvgCode,
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                Theme.of(context).colorScheme.onSecondaryContainer,
+                BlendMode.srcIn,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -744,10 +747,14 @@ class _AiHomeState extends State<AiHome> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.psychology_rounded,
-                size: 64,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              SvgPicture.string(
+                iconSvgCode,
+                width: 65,
+                height: 65,
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).colorScheme.onSurface,
+                  BlendMode.srcIn,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -838,10 +845,14 @@ class _AiHomeState extends State<AiHome> {
                     ),
                   ],
                 ),
-                child: Icon(
-                  Icons.psychology_rounded,
-                  color: theme.colorScheme.onPrimary,
-                  size: 22,
+                child: SvgPicture.string(
+                  iconSvgCode,
+                  width: 26,
+                  height: 26,
+                  colorFilter: ColorFilter.mode(
+                    theme.colorScheme.primaryContainer,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
