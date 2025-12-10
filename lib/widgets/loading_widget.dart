@@ -1,4 +1,6 @@
+import 'package:aihub/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class ExpressiveLoadingWidget extends StatelessWidget {
   final String aiName;
@@ -37,17 +39,16 @@ class ExpressiveLoadingWidget extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
+              SizedBox(
                 width: 80,
                 height: 80,
-                decoration: ShapeDecoration(
-                  color: colorScheme.primaryContainer,
-                  shape: const CircleBorder(),
-                ),
-                child: Icon(
-                  Icons.psychology_alt_rounded,
-                  color: colorScheme.onPrimaryContainer,
-                  size: 36,
+                child: SvgPicture.string(
+                  iconSvgCode,
+                  fit: BoxFit.fitHeight,
+                  colorFilter: ColorFilter.mode(
+                    colorScheme.onPrimaryContainer,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
 

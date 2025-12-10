@@ -1,5 +1,6 @@
 import 'package:aihub/utils/common.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import '../utils/constants.dart';
 
 class CustomDrawer extends StatelessWidget {
@@ -103,10 +104,14 @@ class CustomDrawer extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: Icon(
-                            Icons.psychology_rounded,
-                            color: colorScheme.onPrimary,
-                            size: 32,
+                          child: SvgPicture.string(
+                            iconSvgCode,
+                            width: 33,
+                            height: 33,
+                            colorFilter: ColorFilter.mode(
+                              theme.colorScheme.primaryContainer,
+                              BlendMode.srcIn,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -367,10 +372,14 @@ class CustomDrawer extends StatelessWidget {
                 ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.psychology_alt_outlined,
-                size: 48,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+              child: SvgPicture.string(
+                iconSvgCode,
+                height: 48,
+                width: 48,
+                colorFilter: ColorFilter.mode(
+                  colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  BlendMode.srcIn,
+                ),
               ),
             ),
             const SizedBox(height: 24),
