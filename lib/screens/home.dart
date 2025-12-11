@@ -709,12 +709,13 @@ class _AiHomeState extends State<AiHome> {
 
   Future<void> _handleSettingsReturn() async {
     await _loadEnabledAiList();
-    int? fontSize = fontSizes[await SharedPrefs.getFontSize()];
-    if (fontSize != _defaultFontSize) {
-      for (var controller in _controllers) {
-        if (controller == null) continue;
-        controller.setSettings(
-          settings: InAppWebViewSettings(defaultFontSize: fontSize),
+
+    final newFontSize = fontSizes[await SharedPrefs.getFontSize()] ?? 16;
+    if (newFontSize != _defaultFontSize) {
+      _defaultFontSize = newFontSize;
+      for (final c in _controllers) {
+        c?.setSettings(
+          settings: InAppWebViewSettings(defaultFontSize: _defaultFontSize),
         );
       }
     }
@@ -723,16 +724,16 @@ class _AiHomeState extends State<AiHome> {
       _selectedIndex = 0;
     }
 
-    if (_selectedIndex < _hasBeenLoadedList.length &&
-        _hasBeenLoadedList[_selectedIndex]) {
-      setState(() {
-        _currentDomain = _getDomainFromUrl(
-          _enabledAiList[_selectedIndex]['url'],
-        );
-      });
+    if (_controllers[_selectedIndex] != null) {
+      final currentUrl = await _controllers[_selectedIndex]!.getUrl();
+      _currentDomain = _getBestDomainName(currentUrl.toString());
+    } else if (_currentUrls[_selectedIndex].isNotEmpty) {
+      _currentDomain = _getBestDomainName(_currentUrls[_selectedIndex]);
+    } else {
+      _currentDomain = _getDomainFromUrl(_enabledAiList[_selectedIndex]['url']);
     }
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
