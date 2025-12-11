@@ -13,7 +13,7 @@ final List<Map<String, dynamic>> aiList = [
   },
   {
     'name': 'Duck AI',
-    'url': 'https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat&duckai=1',
+    'url': 'https://duck.ai/',
     'icon': Icons.security,
     'color': Colors.orange,
     'desc': 'Private search engine',
@@ -123,6 +123,7 @@ List<String> allowedDomains = [
   "oaiusercontent.com",
 
   // DuckDuckGo
+  "duck.ai",
   "duckduckgo.com",
 
   // Venice
