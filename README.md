@@ -106,6 +106,10 @@ It supports dynamic colors, theme match, tab switching, background running, text
 - **[Flutter](https://flutter.dev/)** — The framework that helped me build the app.
 - **[Material Design 3](https://m3.material.io/)** — The design style used for the app’s UI.
 
+                        
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/SilentCoderHere/AI-hub.svg?variant=adaptive)](https://starchart.cc/SilentCoderHere/AI-hub)
+
 ## 💡 Contributing
 
 Pull requests, small UI fixes, and new ideas are always welcome.  
